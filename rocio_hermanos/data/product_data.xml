@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_brother_fee" model="product.product">
+        <field name="name">Cuota de Hermano</field>
+        <field name="type">service</field>
+        <field name="list_price">15.0</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">False</field>
+    </record>
+</odoo>
+

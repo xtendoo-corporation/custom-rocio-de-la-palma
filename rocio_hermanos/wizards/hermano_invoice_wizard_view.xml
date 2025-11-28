@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_rocio_hermano_invoice_wizard_form" model="ir.ui.view">
+        <field name="name">rocio.hermano.invoice.wizard.form</field>
+        <field name="model">rocio.hermano.invoice.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generar cuotas de hermanos">
+                <group>
+                    <field name="invoice_date"/>
+                    <field name="product_id"/>
+                    <field name="journal_id"/>
+                </group>
+                <footer>
+                    <button string="Cancelar" class="btn btn-secondary" special="cancel"/>
+                    <button string="Generar facturas" type="object" name="action_generate_invoices" class="btn btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+

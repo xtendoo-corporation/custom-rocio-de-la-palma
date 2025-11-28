@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vincular el producto creado como valor por defecto en ir.config_parameter -->
+    <record id="product_brother_fee" model="product.product">
+        <field name="name">Cuota de Hermano</field>
+        <field name="type">service</field>
+        <field name="list_price">15.0</field>
+        <field name="sale_ok">True</field>
+        <field name="purchase_ok">False</field>
+    </record>
+
+    <record id="param_brother_fee_product" model="ir.config_parameter">
+        <field name="key">rocio_hermanos.brother_fee_product_id</field>
+        <field name="value">ref(rocio_hermanos.product_brother_fee)</field>
+    </record>
+</odoo>
+

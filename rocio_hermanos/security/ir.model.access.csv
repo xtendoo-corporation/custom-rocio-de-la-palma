@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_res_partner_rocio_hermanos,res.partner.rocio_hermanos,model_res_partner,base.group_user,1,1,1,1
+access_rocio_hermano_invoice_wizard,rocio.hermano.invoice.wizard,model_rocio_hermano_invoice_wizard,base.group_user,1,1,1,1
+

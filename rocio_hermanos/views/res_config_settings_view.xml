@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_config_settings_rocio_hermanos" model="ir.ui.view">
+        <field name="name">res.config.settings.view.rocio.hermanos</field>
+        <field name="model">res.config.settings</field>
+        <field name="arch" type="xml">
+            <form string="Ajustes" groups="base.group_system"/>
+        </field>
+    </record>
+
+    <record id="res_config_settings_rocio_hermanos_inherit" model="ir.ui.view">
+        <field name="name">res.config.settings.rocio.hermanos.inherit</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.view_config_settings"/>
+        <field name="arch" type="xml">
+            <xpath expr="/form/sheet/notebook/page[@string='General Settings']" position="inside">
+                <group string="Hermandad">
+                    <field name="brother_fee_product_id"/>
+                    <field name="brother_fee_journal_id"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
