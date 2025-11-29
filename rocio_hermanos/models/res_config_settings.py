@@ -13,28 +13,11 @@ class ResConfigSettings(models.TransientModel):
 
     brother_fee_journal_id = fields.Many2one(
         'account.journal',
-        string='Diario de ventas cuota',
+        string='Diario de ventas cuota de hermano',
         domain=[('type', '=', 'sale')],
         config_parameter='rocio_hermanos.brother_fee_journal_id',
     )
 
-    @api.model
-    def get_values(self):
-        res = super(ResConfigSettings, self).get_values()
-        params = self.env['ir.config_parameter'].sudo()
-        product_id = params.get_param('rocio_hermanos.brother_fee_product_id')
-        journal_id = params.get_param('rocio_hermanos.brother_fee_journal_id')
-        if product_id:
-            res.update({'brother_fee_product_id': int(product_id)})
-        if journal_id:
-            res.update({'brother_fee_journal_id': int(journal_id)})
-        return res
-
-    def set_values(self):
-        super(ResConfigSettings, self).set_values()
-        params = self.env['ir.config_parameter'].sudo()
-        if self.brother_fee_product_id:
-            params.set_param('rocio_hermanos.brother_fee_product_id', str(self.brother_fee_product_id.id))
-        if self.brother_fee_journal_id:
-            params.set_param('rocio_hermanos.brother_fee_journal_id', str(self.brother_fee_journal_id.id))
-
+    # The config_parameter on fields handles get/set automatically in Odoo 14+,
+    # so we don't need to implement get_values/set_values manually unless we
+    # need extra behavior.

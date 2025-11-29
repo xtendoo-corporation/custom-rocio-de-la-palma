@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from odoo.tests.common import TransactionCase
 from odoo import fields
+from odoo.exceptions import UserError
+from datetime import date
 
 
 class TestRocioHermanosInvoiceGeneration(TransactionCase):
@@ -56,3 +58,44 @@ class TestRocioHermanosInvoiceGeneration(TransactionCase):
             self.assertEqual(line.product_id, self.product)
             self.assertAlmostEqual(line.price_unit, 15.0)
 
+    def test_generate_invoices_excludes_baja(self):
+        # Crear dos hermanos: uno activo y uno con fecha de baja
+        active = self.env['res.partner'].create({'name': 'Hermano Activo', 'is_brother': True})
+        baja = self.env['res.partner'].create({'name': 'Hermano Baja', 'is_brother': True, 'brother_end_date': date.today()})
+
+        wizard = self.env['rocio.hermano.invoice.wizard'].create({
+            'invoice_date': date.today(),
+            'product_id': self.product.id,
+            'journal_id': self.journal.id,
+        })
+
+        # Ejecutar generador
+        action = wizard.action_generate_invoices()
+
+        # Comprobar que solo se creó la factura para el activo
+        invoices = self.env['account.move'].search([('invoice_origin', '=', 'Cuota de hermano')])
+        self.assertEqual(len(invoices), 1)
+        self.assertEqual(invoices.partner_id.id, active.id)
+
+    def test_generate_invoices_delegated(self):
+        # Crear un partner delegado
+        delegado = self.env['res.partner'].create({'name': 'Delegado'})
+        hermano = self.env['res.partner'].create({'name': 'Hermano Delegado', 'is_brother': True, 'brother_has_delegated_collection': True, 'brother_delegated_partner_id': delegado.id})
+
+        wizard = self.env['rocio.hermano.invoice.wizard'].create({
+            'invoice_date': date.today(),
+            'product_id': self.product.id,
+            'journal_id': self.journal.id,
+        })
+
+        wizard.action_generate_invoices()
+        invoices = self.env['account.move'].search([('invoice_origin', '=', 'Cuota de hermano')])
+        self.assertEqual(len(invoices), 1)
+        self.assertEqual(invoices.partner_id.id, delegado.id)
+
+    def test_missing_product_raises(self):
+        # Borrar param
+        self.env['ir.config_parameter'].sudo().set_param('rocio_hermanos.brother_fee_product_id', '')
+        wizard = self.env['rocio.hermano.invoice.wizard'].create({'invoice_date': date.today()})
+        with self.assertRaises(UserError):
+            wizard.action_generate_invoices()

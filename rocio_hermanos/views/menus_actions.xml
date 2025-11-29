@@ -22,7 +22,7 @@
         <field name="res_model">rocio.hermano.invoice.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
-        <field name="view_id" ref="view_rocio_hermano_invoice_wizard_form"/>
+        <field name="view_id" ref="view_rocio_hermano_invoice_wizard"/>
     </record>
 
     <menuitem id="menu_rocio_hermanos_generate" name="Generar cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermano_invoice_wizard"/>
