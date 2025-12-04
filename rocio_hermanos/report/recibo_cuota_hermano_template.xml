@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="recibo_cuota_hermano_document">
+        <t t-call="web.html_container">
+            <t t-set="_styles">
+                <style type="text/css">
+                    @font-face {
+                        font-family: 'DejaVu Sans';
+                        src: url('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf') format('truetype');
+                    }
+                    body, div, span, table, th, td, strong {
+                        font-family: 'DejaVu Sans', sans-serif !important;
+                    }
+                </style>
+            </t>
+            <t t-foreach="docs" t-as="invoice">
+                <div style="width: 100%; font-size: 13px;">
+                    <!-- Cabecera Hermandad -->
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <strong style="font-size: 18px;">HERMANDAD DE NTRA. SRA. DEL ROCÍO</strong><br/>
+                        <span>Calle Ejemplo, 123 - 21000 Huelva</span><br/>
+                        <span>CIF: X12345678</span><br/>
+                        <span>Tel: 959 000 000</span>
+                    </div>
+                    <hr/>
+                    <!-- Datos del recibo -->
+                    <div style="margin-bottom: 10px;">
+                        <strong>Fecha:</strong> <span t-esc="invoice.invoice_date"/>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Hermano:</strong> <span t-esc="invoice.partner_id.name"/>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Dirección:</strong> <span t-esc="invoice.partner_id.contact_address"/>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Nº de Recibo:</strong> <span t-esc="invoice.name"/>
+                    </div>
+                    <hr/>
+                    <!-- Detalle de productos -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                        <thead>
+                            <tr>
+                                <th style="border-bottom: 1px solid #000; text-align: left;">Concepto</th>
+                                <th style="border-bottom: 1px solid #000; text-align: right;">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="invoice.invoice_line_ids" t-as="line">
+                                <td><span t-esc="line.name"/></td>
+                                <td style="text-align: right;"><span t-esc="line.price_subtotal"/> <span>&#8364;</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="text-align: right; font-size: 15px;">
+                        <strong>Total:</strong> <span t-esc="invoice.amount_total"/> <span>&#8364;</span>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

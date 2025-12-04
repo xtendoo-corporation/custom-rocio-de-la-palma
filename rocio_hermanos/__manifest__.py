@@ -4,7 +4,7 @@
     'version': '18.0.1.0.0',
     'summary': 'Gestión de hermanos y generación de cuotas',
     'category': 'Tools',
-    'author': 'Auto-generated',
+    'author': 'Manuel Calero, Ivan Parrado, Xtendoo',
     'depends': ['base', 'contacts', 'account', 'sale', 'product'],
     'data': [
         'security/ir.model.access.csv',
@@ -13,6 +13,9 @@
         'wizards/hermano_invoice_wizard_view.xml',
         'views/menus_actions.xml',
         'data/product_data.xml',
+        'report/report_paperformat_a5.xml',
+        'report/recibo_cuota_hermano_template.xml',
+        'report/recibo_cuota_hermano_report.xml',
     ],
     'installable': True,
     'application': True,

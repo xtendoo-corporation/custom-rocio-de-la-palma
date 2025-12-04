@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="recibo_cuota_hermano_report" model="ir.actions.report">
+        <field name="name">Recibo Cuota Hermano</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">rocio_hermanos.recibo_cuota_hermano_document</field>
+        <field name="report_file">rocio_hermanos.recibo_cuota_hermano_document</field>
+        <field name="paperformat_id" ref="rocio_hermanos.paperformat_rocio_hermanos_a5"/>
+        <field name="print_report_name">'Recibo_' + object.name</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>
