@@ -13,11 +13,17 @@
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//form" position="inside">
-                <group name="group_rocio_hermanos" string="Hermandad">
-                    <field name="brother_fee_product_id"/>
-                    <field name="brother_fee_journal_id"/>
-                </group>
+            <xpath expr="//div[@id='companies']" position="after">
+                <div id="hermandad_settings">
+                    <block title="Hermandad" name="hermandad_setting_container">
+                        <setting id="hermandad_fee_product_setting" string="Producto de cuota de hermano">
+                            <field name="brother_fee_product_id"/>
+                        </setting>
+                        <setting id="hermandad_fee_journal_setting" string="Diario de cuotas de hermano">
+                            <field name="brother_fee_journal_id"/>
+                        </setting>
+                    </block>
+                </div>
             </xpath>
         </field>
     </record>

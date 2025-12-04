@@ -4,7 +4,7 @@
         <field name="name">res.partner.form.rocio.hermanos</field>
         <field name="model">res.partner</field>
         <!-- Heredamos la vista oficial de contactos -->
-        <field name="inherit_id" ref="contacts.view_partner_form"/>
+        <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
             <xpath expr="/form/sheet/notebook" position="inside">
                 <page string="Hermandad">
@@ -34,8 +34,8 @@
             <search>
                 <field name="name"/>
                 <field name="email"/>
-                <filter name="filter_is_brother_active" string="Hermanos activos" domain="[(\'brother_active\',\'=\',True)]"/>
-                <filter name="filter_brother_historic" string="Hermanos de baja" domain="[(\'is_brother\',\'=\',True),(\'brother_end_date\','&gt;','1900-01-01')]"/>
+                <filter name="filter_is_brother_active" string="Hermanos activos" domain="[('brother_active','=',True)]"/>
+                <filter name="filter_brother_historic" string="Hermanos de baja" domain="[('is_brother','=',True),('brother_end_date','>','1900-01-01')]"/>
             </search>
         </field>
     </record>
@@ -45,14 +45,14 @@
         <field name="name">res.partner.tree.rocio.hermanos</field>
         <field name="model">res.partner</field>
         <field name="arch" type="xml">
-            <tree string="Hermanos">
+            <list string="Hermanos">
                 <field name="name"/>
                 <field name="is_company"/>
                 <field name="email"/>
                 <field name="phone"/>
                 <field name="brother_since"/>
                 <field name="brother_category"/>
-            </tree>
+            </list>
         </field>
     </record>
 </odoo>

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Menú principal de la hermandad -->
-    <menuitem id="menu_rocio_root" name="Hermandad" sequence="90"/>
+    <menuitem id="menu_rocio_root" name="Hermandad" sequence="90" web_icon="website_membership,static/description/icon.png"/>
 
     <!-- Acceso a la lista de hermanos (vista tree heredada) -->
     <record id="action_res_partner_rocio_hermanos" model="ir.actions.act_window">
         <field name="name">Hermanos</field>
         <field name="res_model">res.partner</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_res_partner_tree_rocio_hermanos"/>
         <field name="domain">[('is_brother','=',True)]</field>
         <field name="context">{'default_is_brother': True}</field>
@@ -31,7 +31,7 @@
     <record id="action_rocio_hermanos_invoices" model="ir.actions.act_window">
         <field name="name">Facturas de cuotas</field>
         <field name="res_model">account.move</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="domain">[('invoice_origin','=','Cuota de hermano'),('move_type','in',['out_invoice','out_refund'])]</field>
     </record>
     <menuitem id="menu_rocio_hermanos_invoices" name="Facturas de cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermanos_invoices"/>
