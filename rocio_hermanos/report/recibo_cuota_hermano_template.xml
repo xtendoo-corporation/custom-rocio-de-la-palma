@@ -74,7 +74,13 @@
                         <strong>Hermano:</strong> <span t-esc="invoice.partner_id.name"/>
                     </div>
                     <div class="recibo-info">
-                        <strong>Dirección:</strong> <span t-esc="invoice.partner_id.contact_address"/>
+                        <strong>Dirección de entrega:</strong>
+                        <t t-if="invoice.partner_shipping_id">
+                            <span t-esc="invoice.partner_shipping_id.contact_address"/>
+                        </t>
+                        <t t-else="">
+                            <span t-esc="invoice.partner_id.contact_address"/>
+                        </t>
                     </div>
                     <table class="recibo-table">
                         <thead>
