@@ -45,12 +45,12 @@ class RocioHermanoInvoiceWizard(models.TransientModel):
 
         created_invoices = self.env['account.move']
         for partner in partners:
-            # Determinar partner de facturación
-            partner_invoice = partner
+            # partner_id SIEMPRE es el hermano, nunca el delegado
+            invoice_partner_id = partner.id
+            partner_shipping_id = False
             if partner.brother_has_delegated_collection and partner.brother_delegated_partner_id:
-                partner_invoice = partner.brother_delegated_partner_id
+                partner_shipping_id = partner.brother_delegated_partner_id.id
 
-            # Construir línea de factura
             line_vals = {
                 'product_id': self.product_id.id,
                 'name': self.product_id.display_name,
@@ -60,12 +60,14 @@ class RocioHermanoInvoiceWizard(models.TransientModel):
 
             invoice_vals = {
                 'move_type': 'out_invoice',
-                'partner_id': partner_invoice.id,
+                'partner_id': invoice_partner_id,  # SIEMPRE el hermano
                 'invoice_date': self.invoice_date,
                 'journal_id': journal.id,
                 'invoice_line_ids': [(0, 0, line_vals)],
                 'invoice_origin': 'Cuota de hermano',
             }
+            if partner_shipping_id:
+                invoice_vals['partner_shipping_id'] = partner_shipping_id  # Dirección de entrega: delegado
 
             invoice = self.env['account.move'].create(invoice_vals)
             created_invoices += invoice

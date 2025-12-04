@@ -47,7 +47,6 @@
         <field name="arch" type="xml">
             <list string="Hermanos">
                 <field name="name"/>
-                <field name="is_company"/>
                 <field name="email"/>
                 <field name="phone"/>
                 <field name="brother_since"/>
