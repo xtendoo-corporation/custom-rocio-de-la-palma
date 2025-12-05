@@ -9,95 +9,103 @@
                 }
                 .recibo-main {
                     background: #fff;
-                    border-radius: 10px;
+                    border-radius: 12px;
                     box-shadow: 0 2px 8px #bbb;
-                    padding: 24px 24px 16px 24px;
-                    margin: 0 auto 10px auto;
-                    width: 95%;
+                    padding: 18px 18px 18px 18px;
+                    margin: 0 auto 0 auto;
+                    max-width: 700px;
+                    width: 98%;
+                    border: 1.5px solid #222;
                 }
                 .recibo-header {
-                    background: #1a4fa0;
-                    color: #fff;
-                    border-radius: 8px 8px 0 0;
-                    padding: 16px 8px 10px 8px;
-                    text-align: center;
-                    margin-bottom: 18px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 2px solid #222;
+                    padding-bottom: 16px;
+                    margin-bottom: 25px;
                 }
-                .recibo-header strong {
-                    font-size: 20px;
-                    letter-spacing: 1px;
+                .recibo-logo {
+                    max-width: 140px;
+                    max-height: 93px;
+                    object-fit: contain;
                 }
-                .recibo-info {
-                    margin-bottom: 10px;
-                    font-size: 13px;
-                }
-                .recibo-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 12px;
-                    font-size: 13px;
-                }
-                .recibo-table th {
-                    background: #1a4fa0;
-                    color: #fff;
-                    padding: 6px 4px;
-                    border-bottom: 2px solid #1a4fa0;
-                }
-                .recibo-table td {
-                    padding: 5px 4px;
-                    border-bottom: 1px solid #e0e0e0;
-                }
-                .recibo-table tr:nth-child(even) td {
-                    background: #f4f7fb;
-                }
-                .recibo-total {
+                .recibo-title {
                     text-align: right;
-                    font-size: 16px;
-                    color: #1a4fa0;
+                    color: #000;
+                    font-size: 21px;
+                    font-weight: 700;
+                    letter-spacing: 1px;
+                    line-height: 1.2;
+                }
+                .recibo-content {
+                    margin-top: 14px;
+                    font-size: 18px;
+                    line-height: 1.7;
+                }
+                .recibo-label {
                     font-weight: bold;
-                    margin-top: 8px;
+                    color: #000;
+                    font-size: 19px;
+                }
+                .recibo-section {
+                    margin-bottom: 25px;
+                    padding-bottom: 8px;
+                    border-bottom: 1.5px dashed #888;
+                }
+                .recibo-section:last-child {
+                    border-bottom: none;
+                }
+                .recibo-footer {
+                    margin-top: 25px;
+                    font-size: 15px;
+                    color: #555;
+                    text-align: right;
                 }
             </style>
             <t t-foreach="docs" t-as="invoice">
                 <div class="recibo-main">
                     <div class="recibo-header">
-                        <strong>HERMANDAD DE NTRA. SRA. DEL ROCÍO</strong><br/>
-                        <span>Calle Ejemplo, 123 - 21000 Huelva</span><br/>
-                        <span>CIF: X12345678</span> <span>Tel: 959 000 000</span>
+                        <div style="width: 180px; display: flex; align-items: center;">
+                            <t t-if="invoice.company_id.logo">
+                                <img class="recibo-logo" t-att-src="image_data_uri(invoice.company_id.logo)" alt="Logo de la compañía"/>
+                            </t>
+                        </div>
+                        <div class="recibo-title">
+                            Real, Muy antigua, Ilustre, Fervorosa y Humilde Hermandad de Nuestra Señora del Rocío
+                        </div>
                     </div>
-                    <div class="recibo-info">
-                        <strong>Fecha:</strong> <span t-esc="invoice.invoice_date"/>
-                        |
-                        <strong>Nº de Recibo:</strong> <span t-esc="invoice.name"/>
+                    <div class="recibo-content">
+                        <div class="recibo-section">
+                            Hemos recibido de nuestro Hermano/a:
+                            <strong class="recibo-label" t-esc="invoice.partner_id.name"/>
+                            <br/>
+                            <strong class="recibo-label" t-esc="invoice.partner_id.contact_address"/>
+                        </div>
+                        <div class="recibo-section">
+                            La cantidad de <strong class="recibo-label" t-esc="invoice.amount_total"/> € correspondiente a la cuota del año <strong class="recibo-label" t-esc="invoice.invoice_date and invoice.invoice_date.year or ''"/>
+                        </div>
+                        <div class="recibo-section">
+                            Antigüedad como Hermano/a:
+                            <strong class="recibo-label" t-esc="invoice.partner_id.brother_since"/>
+                        </div>
+                        <div class="recibo-section">
+                            Dirección de cobro:
+                            <t t-if="invoice.partner_shipping_id">
+                                <strong class="recibo-label" t-esc="invoice.partner_shipping_id.contact_address"/>
+                            </t>
+                            <t t-else="">
+                                <strong class="recibo-label" t-esc="invoice.partner_id.contact_address"/>
+                            </t>
+                        </div>
                     </div>
-                    <div class="recibo-info">
-                        <strong>Hermano:</strong> <span t-esc="invoice.partner_id.name"/>
+                    <div class="recibo-footer">
+                        "Que la Virgen del Rocío os bendiga y acompañe siempre."
+                        <br/>
+                        Recibo generado automáticamente por la Hermandad
                     </div>
-                    <div class="recibo-info">
-                        <strong>Dirección de entrega:</strong>
-                        <t t-if="invoice.partner_shipping_id">
-                            <span t-esc="invoice.partner_shipping_id.contact_address"/>
-                        </t>
-                        <t t-else="">
-                            <span t-esc="invoice.partner_id.contact_address"/>
-                        </t>
-                    </div>
-                    <table class="recibo-table">
-                        <thead>
-                            <tr>
-                                <th>Concepto</th>
-                                <th style="text-align: right;">Importe</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr t-foreach="invoice.invoice_line_ids" t-as="line">
-                                <td><span t-esc="line.name"/></td>
-                                <td style="text-align: right;"><span t-esc="line.price_subtotal"/> <span>€</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="recibo-total">
-                        Total: <span t-esc="invoice.amount_total"/> <span>€</span>
+                    <div style="width:100%;text-align:center;margin-top:18px;">
+                        <img src="/custom-rocio-de-la-palma/rocio_hermanos/static/description/rocio-comic-separator.png" alt="Imagen personalizada" style="max-width:220px;max-height:80px;display:inline-block;"/>
                     </div>
                 </div>
             </t>
