@@ -10,8 +10,21 @@ class ResPartner(models.Model):
     brother_since = fields.Date(string='Fecha alta como hermano')
     brother_end_date = fields.Date(string='Fecha baja como hermano')
     brother_district = fields.Char(string='Distrito')
+    brother_birth_date = fields.Date(string='Fecha de nacimiento')
     brother_has_delegated_collection = fields.Boolean(
         string='Cobro delegado en otra dirección',
+    )
+    brother_advertising = fields.Boolean(
+        string='Acepta publicidad',
+        help='Indica si el hermano acepta recibir publicidad de la hermandad.',
+    )
+    brother_leave_reason = fields.Text(string='Motivo de baja como hermano')
+    brother_method_of_payment = fields.Selection(
+        [
+            ('domiciliacion', 'Domiciliación bancaria'),
+            ('efectivo', 'Efectivo'),
+        ],
+        string='Método de pago',
     )
     brother_delegated_partner_id = fields.Many2one(
         'res.partner',
