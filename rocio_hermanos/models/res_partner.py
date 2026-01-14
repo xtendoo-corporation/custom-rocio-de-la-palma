@@ -21,8 +21,9 @@ class ResPartner(models.Model):
     brother_leave_reason = fields.Text(string='Motivo de baja como hermano')
     brother_method_of_payment = fields.Selection(
         [
-            ('domiciliacion', 'Domiciliación bancaria'),
-            ('efectivo', 'Efectivo'),
+            ('Banco', 'Banco'),
+            ('efectivo', 'Recibo'),
+            ('otra direccion', 'Otra Dirección'),
         ],
         string='Método de pago',
     )

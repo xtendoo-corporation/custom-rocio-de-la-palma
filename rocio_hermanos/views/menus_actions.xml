@@ -9,7 +9,7 @@
         <field name="res_model">res.partner</field>
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_res_partner_tree_rocio_hermanos"/>
-        <field name="domain">[('is_brother','=',True)]</field>
+        <field name="domain">[("is_brother","=",True)]</field>
         <field name="context">{'default_is_brother': True}</field>
     </record>
 
@@ -27,12 +27,14 @@
 
     <menuitem id="menu_rocio_hermanos_generate" name="Generar cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermano_invoice_wizard"/>
 
-    <!-- Acción y menú para listar facturas creadas por este módulo -->
-    <record id="action_rocio_hermanos_invoices" model="ir.actions.act_window">
-        <field name="name">Facturas de cuotas</field>
-        <field name="res_model">account.move</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('invoice_origin','=','Cuota de hermano'),('move_type','in',['out_invoice','out_refund'])]</field>
+    <!-- Nueva acción servidor: devuelve dinámicamente un act_window filtrado por el diario configurado -->
+    <record id="action_rocio_hermanos_invoices_server" model="ir.actions.server">
+        <field name="name">Facturas de cuotas (filtradas por diario)</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_invoices_filtered_by_config_journal()</field>
     </record>
-    <menuitem id="menu_rocio_hermanos_invoices" name="Facturas de cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermanos_invoices"/>
+
+    <!-- Menú para listar facturas creadas por este módulo -->
+    <menuitem id="menu_rocio_hermanos_invoices" name="Facturas de cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermanos_invoices_server"/>
 </odoo>
