@@ -11,6 +11,7 @@
         'views/res_partner_view.xml',
         'views/res_config_settings_view.xml',
         'wizards/hermano_invoice_wizard_view.xml',
+        'wizards/hermano_import_wizard_view.xml',
         'views/menus_actions.xml',
         'data/product_data.xml',
         'report/report_paperformat_a5.xml',
