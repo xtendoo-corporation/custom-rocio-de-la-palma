@@ -6,19 +6,37 @@
         <!-- Heredamos la vista oficial de contactos -->
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="/form/sheet/notebook" position="inside">
-                <page string="Hermandad">
+            <!-- Movemos el campo ref a la pestaña de Hermandad -->
+            <xpath expr="//field[@name='ref']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Ribbon visual para Hermanos al principio del sheet para posicionamiento correcto -->
+            <xpath expr="//sheet/*[1]" position="before">
+                <widget name="web_ribbon" title="Hermano" bg_color="text-bg-info" invisible="not is_brother"/>
+            </xpath>
+
+            <xpath expr="//field[@name='name']/.." position="after">
+                <div class="o_row" name="is_brother_row">
+                    <field name="is_brother" widget="boolean_toggle" groups="base.group_user"/>
+                    <label for="is_brother" groups="base.group_user" string="Es Hermano"/>
+                </div>
+            </xpath>
+
+            <xpath expr="//notebook/page[1]" position="before">
+                <page string="Hermandad" name="brother_page" invisible="not is_brother" autofocus="autofocus">
                     <group>
-                        <group>
-                            <field name="is_brother" groups="base.group_user"/>
+                        <group name="brother_main_info">
+                            <field name="ref" string="Referencia / Nº Hermano"/>
                             <field name="brother_since" groups="base.group_user"/>
-                            <field name="brother_district" groups="base.group_user"/>
-                            <field name="brother_category" groups="base.group_user"/>
-                        </group>
-                        <group>
-                            <field name="brother_has_delegated_collection" groups="base.group_user"/>
-                            <field name="brother_delegated_partner_id" groups="base.group_user"/>
                             <field name="brother_end_date" groups="base.group_user"/>
+                            <field name="brother_leave_reason_id" groups="base.group_user" invisible="not brother_end_date"/>
+                            <field name="brother_district" groups="base.group_user"/>
+                            <field name="brother_category" groups="base.group_user" invisible="1"/>
+                        </group>
+                        <group name="brother_extra_info">
+                            <field name="brother_has_delegated_collection" groups="base.group_user"/>
+                            <field name="brother_delegated_partner_id" groups="base.group_user" invisible="not brother_has_delegated_collection"/>
                         </group>
                     </group>
                 </page>

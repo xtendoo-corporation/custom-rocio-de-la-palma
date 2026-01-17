@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menú principal de la hermandad -->
+    <menuitem id="menu_rocio_root" name="Hermandad" sequence="90" web_icon="website_membership,static/description/icon.png"/>
+
+    <!-- Estructura de menús -->
+    <menuitem id="menu_rocio_hermanos" name="Cuotas de hermanos" parent="menu_rocio_root" sequence="1"/>
+    <menuitem id="menu_rocio_config" name="Configuración" parent="menu_rocio_root" sequence="100"/>
+</odoo>

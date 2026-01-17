@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Menú principal de la hermandad -->
-    <menuitem id="menu_rocio_root" name="Hermandad" sequence="90" web_icon="website_membership,static/description/icon.png"/>
-
     <!-- Acceso a la lista de hermanos (vista tree heredada) -->
     <record id="action_res_partner_rocio_hermanos" model="ir.actions.act_window">
         <field name="name">Hermanos</field>
@@ -13,7 +10,6 @@
         <field name="context">{'default_is_brother': True}</field>
     </record>
 
-    <menuitem id="menu_rocio_hermanos" name="Cuotas de hermanos" parent="menu_rocio_root" sequence="1"/>
     <menuitem id="menu_rocio_hermanos_list" name="Hermanos" parent="menu_rocio_hermanos" action="action_res_partner_rocio_hermanos"/>
 
     <!-- Acceso al asistente -->
@@ -37,4 +33,13 @@
 
     <!-- Menú para listar facturas creadas por este módulo -->
     <menuitem id="menu_rocio_hermanos_invoices" name="Facturas de cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermanos_invoices_server"/>
+
+
+    <record id="action_rocio_brother_leave_reason" model="ir.actions.act_window">
+        <field name="name">Motivos de baja</field>
+        <field name="res_model">res.partner.leave.reason</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_rocio_brother_leave_reason" name="Motivos de baja" parent="menu_rocio_config" action="action_rocio_brother_leave_reason" sequence="1"/>
 </odoo>

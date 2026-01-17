@@ -3,3 +3,4 @@ access_res_partner_rocio_hermanos,res.partner.rocio_hermanos,model_res_partner,b
 access_rocio_hermano_invoice_wizard,rocio.hermano.invoice.wizard,model_rocio_hermano_invoice_wizard,base.group_user,1,1,1,1
 access_rocio_hermanos_wizard,access_rocio_hermanos_wizard,model_rocio_hermano_invoice_wizard,base.group_user,1,1,1,1
 access_rocio_hermano_import_wizard,rocio.hermano.import.wizard,model_rocio_hermano_import_wizard,base.group_user,1,1,1,1
+access_res_partner_leave_reason,res.partner.leave.reason,model_res_partner_leave_reason,base.group_user,1,1,1,1
