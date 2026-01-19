@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Rocío - Gestión de hermanos",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.0.1",
     "summary": "Gestión de hermanos y generación de cuotas",
     "category": "Tools",
     "author": "Manuel Calero, Ivan Parrado, Xtendoo",

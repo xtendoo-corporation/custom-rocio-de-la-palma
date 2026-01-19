@@ -74,7 +74,7 @@ class RocioHermanoImportWizard(models.TransientModel):
 
     def _get_state_id(self, country_id, state_name):
         """Busca un estado por nombre y país"""
-        if pd.isna(state_name) or not country_id:
+        if not state_name or state_name is None or not country_id:
             return False
         state_name_str = str(state_name).strip()
         if not state_name_str:
@@ -90,24 +90,11 @@ class RocioHermanoImportWizard(models.TransientModel):
 
     def _get_partner_id_by_name(self, name):
         """Busca un contacto por nombre"""
-        if pd.isna(name):
+        if not name or name is None:
             return False
         partner = self.env["res.partner"].search([("name", "=", name)], limit=1)
         return partner.id if partner else False
 
-    def _get_leave_reason_id(self, name):
-        """Busca un motivo de baja por nombre o lo crea"""
-        if not name:
-            return False
-        name_str = str(name).strip()
-        if not name_str:
-            return False
-        reason = self.env["res.partner.leave.reason"].search(
-            [("name", "=", name_str)], limit=1
-        )
-        if not reason:
-            reason = self.env["res.partner.leave.reason"].create({"name": name_str})
-        return reason.id
 
     def _create_or_update_bank_account(self, partner_id, acc_number):
         """Crea o actualiza la cuenta bancaria del contacto"""
@@ -158,6 +145,9 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         # Obtener encabezados
         headers = {cell.value: i for i, cell in enumerate(sheet[1]) if cell.value}
+        print(f"=== ENCABEZADOS ENCONTRADOS ===")
+        print(f"Headers: {list(headers.keys())}")
+        print(f"Total columnas: {len(headers)}")
 
         # Validar que el archivo tenga las columnas necesarias
         required_columns = ["name"]
@@ -180,6 +170,11 @@ class RocioHermanoImportWizard(models.TransientModel):
                 # Mapear fila a diccionario usando encabezados
                 row_data = {h: row[i] for h, i in headers.items() if i < len(row)}
 
+                print(f"\n=== FILA {row_idx} ===")
+                print(f"Datos completos de la fila:")
+                for key, value in row_data.items():
+                    print(f"  {key}: '{value}' (tipo: {type(value)})")
+
                 contact_name = row_data.get("name")
                 if not contact_name:
                     error_count += 1
@@ -188,6 +183,10 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                 # Obtener país primero
                 country_id = self._get_country_id(row_data.get("País"))
+                print(f"País obtenido: {row_data.get('País')} -> ID: {country_id}")
+                print(f"Ciudad obtenida: '{row_data.get('Ciudad')}'")
+                print(f"Street obtenida: '{row_data.get('Street')}'")
+                print(f"Código Postal: '{row_data.get('C.P.')}'")
 
                 vals = {
                     "name": contact_name,
@@ -203,9 +202,6 @@ class RocioHermanoImportWizard(models.TransientModel):
                     ),
                     "brother_since": self._to_date(row_data.get("F ALTA")),
                     "brother_end_date": self._to_date(row_data.get("F BAJA")),
-                    "brother_leave_reason_id": self._get_leave_reason_id(
-                        row_data.get("Motivo")
-                    ),
                     "brother_advertising": self._to_bool(row_data.get("PUBLI")),
                     "brother_method_of_payment": self._map_payment(
                         row_data.get("F DE PAGO")
@@ -219,6 +215,10 @@ class RocioHermanoImportWizard(models.TransientModel):
                     ),
                 }
 
+                print(f"Valores finales para crear/actualizar contacto:")
+                for key, value in vals.items():
+                    print(f"  {key}: '{value}'")
+
                 # Buscar si el contacto ya existe por nombre
                 existing_partner = self.env["res.partner"].search(
                     [("name", "=", contact_name)], limit=1
@@ -226,12 +226,14 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                 if existing_partner:
                     # ACTUALIZAR contacto existente
+                    print(f"ACTUALIZANDO contacto existente: {contact_name}")
                     existing_partner.write(vals)
                     partner_id = existing_partner.id
                     updated_count += 1
                     log_lines.append(_("Actualizado: %s") % contact_name)
                 else:
                     # CREAR nuevo contacto
+                    print(f"CREANDO nuevo contacto: {contact_name}")
                     partner = self.env["res.partner"].create(vals)
                     partner_id = partner.id
                     created_count += 1
@@ -239,6 +241,7 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                 # Crear o actualizar cuenta bancaria si existe en el Excel
                 if "Banco" in row_data and row_data.get("Banco"):
+                    print(f"Procesando cuenta bancaria: {row_data.get('Banco')}")
                     self._create_or_update_bank_account(
                         partner_id, row_data.get("Banco")
                     )

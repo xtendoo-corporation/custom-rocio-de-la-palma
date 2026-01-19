@@ -18,9 +18,6 @@ class ResPartner(models.Model):
         string="Acepta publicidad",
         help="Indica si el hermano acepta recibir publicidad de la hermandad.",
     )
-    brother_leave_reason_id = fields.Many2one(
-        "res.partner.leave.reason", string="Motivo de baja como hermano"
-    )
     brother_method_of_payment = fields.Selection(
         [
             ("Banco", "Banco"),

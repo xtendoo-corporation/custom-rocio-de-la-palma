@@ -30,7 +30,6 @@
                             <field name="ref" string="Referencia / Nº Hermano"/>
                             <field name="brother_since" groups="base.group_user"/>
                             <field name="brother_end_date" groups="base.group_user"/>
-                            <field name="brother_leave_reason_id" groups="base.group_user" invisible="not brother_end_date"/>
                             <field name="brother_district" groups="base.group_user"/>
                             <field name="brother_category" groups="base.group_user" invisible="1"/>
                         </group>
@@ -62,13 +61,22 @@
     <record id="view_res_partner_tree_rocio_hermanos" model="ir.ui.view">
         <field name="name">res.partner.tree.rocio.hermanos</field>
         <field name="model">res.partner</field>
+        <field name="priority">1</field>
         <field name="arch" type="xml">
             <list string="Hermanos">
                 <field name="name"/>
-                <field name="email"/>
-                <field name="phone"/>
+                <field name="street"/>
+                <field name="brother_district"/>
                 <field name="brother_since"/>
-                <field name="brother_category"/>
+                <field name="brother_end_date"/>
+                <field name="zip"/>
+                <field name="city"/>
+                <field name="state_id"/>
+                <field name="brother_birth_date"/>
+                <field name="brother_method_of_payment"/>
+                <field name="brother_advertising"/>
+                <field name="email" optional="hide"/>
+                <field name="phone" optional="hide"/>
             </list>
         </field>
     </record>

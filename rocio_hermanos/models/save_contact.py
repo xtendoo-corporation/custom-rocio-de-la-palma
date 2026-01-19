@@ -2,8 +2,6 @@ import pandas as pd
 import xmlrpc.client
 from datetime import datetime
 
-from urllib3.util.util import to_str
-
 # -----------------------------
 # CONFIGURACIÓN ODOO
 # -----------------------------#cambiar a las credenciales correspondientes
@@ -182,7 +180,6 @@ for _, row in df.iterrows():
         "brother_birth_date": to_date(row["brother_birth_date"]),
         "brother_since": to_date(row["F ALTA"]),
         "brother_end_date": to_date(row["F BAJA"]),
-        "brother_leave_reason": row["Motivo"],
         "brother_advertising": to_bool(row["PUBLI"]),
         "brother_method_of_payment": map_payment(row["F DE PAGO"]),
         "brother_delegated_partner_id": get_partner_id_by_name(row["DIRECCION DE COBRO"]),

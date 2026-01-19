@@ -5,9 +5,23 @@
         <field name="name">Hermanos</field>
         <field name="res_model">res.partner</field>
         <field name="view_mode">list,form</field>
-        <field name="view_id" ref="view_res_partner_tree_rocio_hermanos"/>
         <field name="domain">[("is_brother","=",True)]</field>
         <field name="context">{'default_is_brother': True}</field>
+    </record>
+
+    <!-- Vista específica para la acción de hermanos -->
+    <record id="action_res_partner_rocio_hermanos_view_tree" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_res_partner_tree_rocio_hermanos"/>
+        <field name="act_window_id" ref="action_res_partner_rocio_hermanos"/>
+    </record>
+
+    <record id="action_res_partner_rocio_hermanos_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_res_partner_form_inherit_rocio_hermanos"/>
+        <field name="act_window_id" ref="action_res_partner_rocio_hermanos"/>
     </record>
 
     <menuitem id="menu_rocio_hermanos_list" name="Hermanos" parent="menu_rocio_hermanos" action="action_res_partner_rocio_hermanos"/>
@@ -23,6 +37,8 @@
 
     <menuitem id="menu_rocio_hermanos_generate" name="Generar cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermano_invoice_wizard"/>
 
+
+
     <!-- Nueva acción servidor: devuelve dinámicamente un act_window filtrado por el diario configurado -->
     <record id="action_rocio_hermanos_invoices_server" model="ir.actions.server">
         <field name="name">Facturas de cuotas (filtradas por diario)</field>
@@ -33,13 +49,4 @@
 
     <!-- Menú para listar facturas creadas por este módulo -->
     <menuitem id="menu_rocio_hermanos_invoices" name="Facturas de cuotas" parent="menu_rocio_hermanos" action="action_rocio_hermanos_invoices_server"/>
-
-
-    <record id="action_rocio_brother_leave_reason" model="ir.actions.act_window">
-        <field name="name">Motivos de baja</field>
-        <field name="res_model">res.partner.leave.reason</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
-    <menuitem id="menu_rocio_brother_leave_reason" name="Motivos de baja" parent="menu_rocio_config" action="action_rocio_brother_leave_reason" sequence="1"/>
 </odoo>
