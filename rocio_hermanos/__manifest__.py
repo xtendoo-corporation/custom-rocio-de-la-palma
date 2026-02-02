@@ -9,6 +9,7 @@
     "data": [
         "security/ir.model.access.csv",
         "views/res_partner_view.xml",
+        "views/res_partner_leave_reason_view.xml",
         "views/res_config_settings_view.xml",
         "views/menus.xml",
         "wizards/hermano_invoice_wizard_view.xml",

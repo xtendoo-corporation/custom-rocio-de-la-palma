@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de formulario para los motivos de baja -->
+    <record id="view_res_partner_leave_reason_form" model="ir.ui.view">
+        <field name="name">res.partner.leave.reason.form</field>
+        <field name="model">res.partner.leave.reason</field>
+        <field name="arch" type="xml">
+            <form string="Motivo de baja">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de árbol (lista) para los motivos de baja -->
+    <record id="view_res_partner_leave_reason_tree" model="ir.ui.view">
+        <field name="name">res.partner.leave.reason.tree</field>
+        <field name="model">res.partner.leave.reason</field>
+        <field name="arch" type="xml">
+            <list string="Motivos de baja">
+                <field name="name"/>
+                <field name="active" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Acción para acceder a los motivos de baja -->
+    <record id="action_res_partner_leave_reason" model="ir.actions.act_window">
+        <field name="name">Motivos de baja</field>
+        <field name="res_model">res.partner.leave.reason</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_res_partner_leave_reason_tree"/>
+        <field name="help">Gestiona los motivos por los que un hermano puede dar de baja.</field>
+    </record>
+</odoo>

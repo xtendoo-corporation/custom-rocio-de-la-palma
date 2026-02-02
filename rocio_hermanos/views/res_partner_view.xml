@@ -38,17 +38,18 @@
 
             <!-- Insertamos los datos de hermandad debajo de los datos del contacto, antes del notebook -->
             <xpath expr="//notebook" position="before">
-                <group string="Datos de Hermandad" name="brother_data_group" invisible="not is_brother">
+                <group string="Datos de Hermano" name="brother_data_group" invisible="not is_brother">
                     <group name="brother_main_info">
-                        <field name="ref" string="Referencia / Nº Hermano"/>
+                        <field name="ref" string="Nº Hermano"/>
                         <field name="brother_since" groups="base.group_user"/>
                         <field name="brother_end_date" groups="base.group_user"/>
-                        <field name="brother_district" groups="base.group_user"/>
                         <field name="brother_category" groups="base.group_user" invisible="1"/>
+                        <field name="brother_leave_reason" groups="base.group_user" invisible="not brother_end_date"/>
                     </group>
                     <group name="brother_extra_info">
                         <field name="brother_has_delegated_collection" groups="base.group_user"/>
                         <field name="brother_delegated_partner_id" groups="base.group_user" invisible="not brother_has_delegated_collection"/>
+                        <field name="brother_district" groups="base.group_user"/>
                     </group>
                 </group>
             </xpath>

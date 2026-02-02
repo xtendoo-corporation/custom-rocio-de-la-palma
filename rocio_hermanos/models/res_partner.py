@@ -39,6 +39,11 @@ class ResPartner(models.Model):
         ],
         string="Categoría de hermano",
     )
+    brother_leave_reason = fields.Many2one(
+        "res.partner.leave.reason",
+        string="Motivo de baja",
+        help="Selecciona el motivo por el que el hermano ha dado de baja.",
+    )
 
     # Campo calculado para facilitar dominios: True si es hermano y no tiene fecha de baja.
     brother_active = fields.Boolean(

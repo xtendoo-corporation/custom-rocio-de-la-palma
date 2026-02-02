@@ -5,5 +5,15 @@
 
     <!-- Estructura de menús -->
     <menuitem id="menu_rocio_hermanos" name="Cuotas de hermanos" parent="menu_rocio_root" sequence="1"/>
+    <menuitem id="menu_brother_management" name="Gestión de hermanos" parent="menu_rocio_root" sequence="20"/>
     <menuitem id="menu_rocio_config" name="Configuración" parent="menu_rocio_root" sequence="100"/>
+
+    <!-- Menú para acceder a los motivos de baja -->
+    <menuitem
+        id="menu_res_partner_leave_reason"
+        parent="menu_brother_management"
+        name="Motivos de baja"
+        action="rocio_hermanos.action_res_partner_leave_reason"
+        sequence="40"
+    />
 </odoo>
