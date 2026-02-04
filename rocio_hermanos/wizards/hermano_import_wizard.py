@@ -24,20 +24,50 @@ class RocioHermanoImportWizard(models.TransientModel):
     log_message = fields.Text(string="Log de importación", readonly=True)
 
     def _to_date(self, value):
-        """Convierte un valor a fecha"""
+        """Convierte un valor a fecha. Formatos soportados: MM/DD/YY, DD/MM/YYYY, YYYY-MM-DD"""
         try:
             if value is None or value is False:
                 return False
+
+            # Si ya es datetime
             if isinstance(value, datetime):
                 return value.strftime("%Y-%m-%d")
 
-            # Si es un string, intentar parsear
-            if isinstance(value, str):
-                for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y"):
-                    try:
-                        return datetime.strptime(value, fmt).strftime("%Y-%m-%d")
-                    except ValueError:
-                        continue
+            # Convertir a string y limpiar
+            value_str = str(value).strip()
+            if not value_str or value_str.upper() in ("NONE", "NULL", "N/A"):
+                return False
+
+            # Quitar la parte de hora si existe (todo después del espacio)
+            if " " in value_str:
+                value_str = value_str.split(" ")[0]
+
+            # Intentar parsear con diferentes formatos
+            # Orden de prioridad: primero formato Excel MM/DD/YY, luego otros formatos
+            formats_to_try = [
+                "%m/%d/%y",    # MM/DD/YY (formato Excel de 2 dígitos) - ej: 02/11/83
+                "%m/%d/%Y",    # MM/DD/YYYY (formato Excel de 4 dígitos)
+                "%d/%m/%Y",    # DD/MM/YYYY (formato español tradicional)
+                "%Y-%m-%d",    # YYYY-MM-DD (formato ISO)
+                "%d-%m-%Y",    # DD-MM-YYYY (formato español con guiones)
+            ]
+
+            for fmt in formats_to_try:
+                try:
+                    parsed_date = datetime.strptime(value_str, fmt)
+
+                    # Ajustar años de 2 dígitos si es necesario
+                    # Python interpreta 00-68 como 2000-2068 y 69-99 como 1969-1999
+                    # Para fechas de nacimiento, ajustar si el año está muy en el futuro
+                    if fmt == "%m/%d/%y" and parsed_date.year > datetime.now().year + 10:
+                        # Si la fecha está más de 10 años en el futuro, probablemente
+                        # debería ser del siglo pasado (ej: 55 -> 1955 no 2055)
+                        parsed_date = parsed_date.replace(year=parsed_date.year - 100)
+
+                    return parsed_date.strftime("%Y-%m-%d")
+                except ValueError:
+                    continue
+
             return False
         except Exception:
             return False
@@ -46,7 +76,11 @@ class RocioHermanoImportWizard(models.TransientModel):
         """Convierte un valor a cadena"""
         if value is None or value is False:
             return ""
-        return str(value).strip()
+        value_str = str(value).strip()
+        # Filtrar "None" como string
+        if value_str.upper() in ("NONE", "NULL", "N/A"):
+            return ""
+        return value_str
 
     def _to_bool(self, value):
         """Convierte un valor a booleano"""
@@ -241,6 +275,20 @@ class RocioHermanoImportWizard(models.TransientModel):
             return "efectivo"
         return False
 
+    def _map_language(self, value):
+        """Mapea el idioma según el valor del campo lang"""
+        if not value:
+            return "en_US"  # Inglés por defecto
+
+        value_str = str(value).strip().lower()
+
+        # Si contiene "españa" o "spanish" o "español", usar español
+        if any(word in value_str for word in ["españa", "spanish", "español", "espana", "es"]):
+            return "es_ES"  # Español de España
+
+        # En cualquier otro caso, inglés
+        return "en_US"
+
     def action_import(self):
         """Importa los hermanos desde el archivo Excel"""
         self.ensure_one()
@@ -301,13 +349,38 @@ class RocioHermanoImportWizard(models.TransientModel):
                 print(f"Street obtenida: '{row_data.get('Street')}'")
 
                 # Buscar código postal en diferentes formatos posibles
-                zip_code = (row_data.get("C.P."))
+                zip_code = row_data.get("zip_code") or row_data.get("C.P.") or row_data.get("C POSTAL")
+                print(f"DEBUG - CP bruto del Excel: '{zip_code}' (tipo: {type(zip_code)})")
                 zip_code = self._to_str(zip_code)
-                print(f"Código Postal encontrado: '{zip_code}'")
+                print(f"DEBUG - CP después de _to_str: '{zip_code}'")
 
-                # Intentar autocompletar dirección española si no hay ciudad pero sí código postal
-                city = row_data.get("Ciudad")
-                state_id = self._get_state_id(country_id, row_data.get("State_id"))
+                # Obtener ciudad del Excel
+                city = self._to_str(row_data.get("city") or row_data.get("Ciudad"))
+                print(f"DEBUG - Ciudad leída del Excel: '{city}'")
+
+                # Obtener provincia/estado del Excel (buscar por nombre)
+                state_name = self._to_str(row_data.get("state_id") or row_data.get("State_id") or row_data.get("PROVINCIA"))
+                print(f"DEBUG - Provincia leída del Excel: '{state_name}'")
+
+                state_id = False
+                if state_name:
+                    # Primero buscar con país si lo tenemos
+                    if country_id:
+                        state_id = self._get_state_id(country_id, state_name)
+                        print(f"DEBUG - Búsqueda con país {country_id}: state_id={state_id}")
+
+                    # Si no encontramos el estado, buscar sin país
+                    if not state_id:
+                        state = self.env["res.country.state"].search([
+                            ("name", "ilike", state_name.strip())
+                        ], limit=1)
+                        print(f"DEBUG - Búsqueda sin país: {state.name if state else 'No encontrado'}")
+                        if state:
+                            state_id = state.id
+                            # Si encontramos estado, usar su país
+                            if not country_id:
+                                country_id = state.country_id.id
+                                print(f"DEBUG - País determinado por provincia: {country_id}")
 
                 print(f"Antes autocompletado: Ciudad='{city}', CP='{zip_code}', Estado={state_id}")
 
@@ -357,19 +430,30 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 print(f"Cambiando país a España por CP {zip_code}")
                                 country_id = spain.id
 
+                # Debug de fechas
+                birth_date_raw = row_data.get("brother_birth_date") or row_data.get("NACIMIENTO")
+                print(f"DEBUG - Fecha nacimiento bruta: '{birth_date_raw}' (tipo: {type(birth_date_raw)})")
+                birth_date_parsed = self._to_date(birth_date_raw)
+                print(f"DEBUG - Fecha nacimiento parseada: '{birth_date_parsed}'")
+
+                since_date_raw = row_data.get("F ALTA")
+                print(f"DEBUG - Fecha alta bruta: '{since_date_raw}' (tipo: {type(since_date_raw)})")
+                since_date_parsed = self._to_date(since_date_raw)
+                print(f"DEBUG - Fecha alta parseada: '{since_date_parsed}'")
+
                 vals = {
+                    "ref": self._to_str(row_data.get("REGISTRO")),
                     "name": contact_name,
-                    "street": row_data.get("Street"),
+                    "street": self._to_str(row_data.get("Street") or row_data.get("DIRECCION")),
                     "zip": zip_code,
                     "city": city,
                     "phone": self._to_str(row_data.get("TELEFONO")),
                     "email": self._to_str(row_data.get("EMAIL")),
+                    "lang": self._map_language(row_data.get("lang")),
                     "is_brother": True,
                     "brother_district": self._to_str(row_data.get("DIST")),
-                    "brother_birth_date": self._to_date(
-                        row_data.get("brother_birth_date")
-                    ),
-                    "brother_since": self._to_date(row_data.get("F ALTA")),
+                    "brother_birth_date": birth_date_parsed,
+                    "brother_since": since_date_parsed,
                     "brother_end_date": self._to_date(row_data.get("F BAJA")),
                     "brother_advertising": self._to_bool(row_data.get("PUBLI")),
                     "brother_method_of_payment": self._map_payment(
@@ -386,10 +470,21 @@ class RocioHermanoImportWizard(models.TransientModel):
                 for key, value in vals.items():
                     print(f"  {key}: '{value}'")
 
-                # Buscar si el contacto ya existe por nombre
-                existing_partner = self.env["res.partner"].search(
-                    [("name", "=", contact_name)], limit=1
-                )
+                # Buscar si el contacto ya existe por ref (referencia única)
+                ref_value = vals.get("ref")
+                existing_partner = False
+
+                if ref_value:
+                    existing_partner = self.env["res.partner"].search(
+                        [("ref", "=", ref_value)], limit=1
+                    )
+                    print(f"Buscando hermano existente con ref='{ref_value}': {'Encontrado' if existing_partner else 'No encontrado'}")
+                else:
+                    # Si no hay ref, buscar por nombre como fallback
+                    existing_partner = self.env["res.partner"].search(
+                        [("name", "=", contact_name)], limit=1
+                    )
+                    print(f"Sin ref, buscando por nombre='{contact_name}': {'Encontrado' if existing_partner else 'No encontrado'}")
 
                 if existing_partner:
                     # ACTUALIZAR contacto existente

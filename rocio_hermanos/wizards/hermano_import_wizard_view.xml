@@ -49,7 +49,7 @@
     <!-- Menú para acceder al wizard -->
     <menuitem id="menu_rocio_hermano_import"
               name="Importar hermanos"
-              parent="rocio_hermanos.menu_rocio_hermanos"
+              parent="rocio_hermanos.menu_brother_management"
               action="action_rocio_hermano_import_wizard"
               sequence="100"/>
 

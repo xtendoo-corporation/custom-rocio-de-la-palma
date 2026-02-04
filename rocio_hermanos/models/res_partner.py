@@ -6,13 +6,15 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
 
     # Campos para gestionar hermanos
-    is_brother = fields.Boolean(string="Hermano", default=False)
-    brother_since = fields.Date(string="Fecha de alta")
-    brother_end_date = fields.Date(string="Fecha de baja")
-    brother_district = fields.Char(string="Distrito")
-    brother_birth_date = fields.Date(string="Fecha de nacimiento")
+    ref = fields.Char(string="Referencia interna", required=True, tracking=True)
+    is_brother = fields.Boolean(string="Hermano", default=False, tracking=True)
+    brother_since = fields.Date(string="Fecha de alta", tracking=True)
+    brother_end_date = fields.Date(string="Fecha de baja", tracking=True)
+    brother_district = fields.Char(string="Distrito", tracking=True)
+    brother_birth_date = fields.Date(string="Fecha de nacimiento", tracking=True)
     brother_has_delegated_collection = fields.Boolean(
         string="Cobro delegado en otra dirección",
+        help="Indica si el hermano tiene el cobro delegado en otra dirección/partner.",
     )
     brother_advertising = fields.Boolean(
         string="Acepta publicidad",
@@ -25,6 +27,7 @@ class ResPartner(models.Model):
             ("otra direccion", "Otra Dirección"),
         ],
         string="Método de pago",
+        tracking=True,
     )
     brother_delegated_partner_id = fields.Many2one(
         "res.partner",
@@ -38,11 +41,13 @@ class ResPartner(models.Model):
             ("honor", "Hermano de honor"),
         ],
         string="Categoría de hermano",
+        tracking=True,
     )
     brother_leave_reason = fields.Many2one(
         "res.partner.leave.reason",
         string="Motivo de baja",
         help="Selecciona el motivo por el que el hermano ha dado de baja.",
+        tracking=True,
     )
 
     # Campo calculado para facilitar dominios: True si es hermano y no tiene fecha de baja.

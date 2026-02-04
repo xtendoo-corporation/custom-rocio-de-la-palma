@@ -44,6 +44,7 @@
                         <field name="brother_since" groups="base.group_user"/>
                         <field name="brother_end_date" groups="base.group_user"/>
                         <field name="brother_category" groups="base.group_user" invisible="1"/>
+                        <field name="brother_birth_date" groups="base.group_user"/>
                         <field name="brother_leave_reason" groups="base.group_user" invisible="not brother_end_date"/>
                     </group>
                     <group name="brother_extra_info">
