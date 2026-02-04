@@ -206,14 +206,32 @@ class RocioHermanoImportWizard(models.TransientModel):
             limit=1,
         )
 
+        bank_id = False
         if existing_bank:
-            return existing_bank.id
+            bank_id = existing_bank.id
         else:
             # Si no existe, crear nueva cuenta bancaria
             bank = self.env["res.partner.bank"].create(
                 {"acc_number": acc_number_str, "partner_id": partner_id}
             )
-            return bank.id
+            bank_id = bank.id
+
+        # Si se obtuvo una cuenta bancaria válida, asignar el modo de pago SEPA Direct Debit
+        if bank_id:
+            # Buscar el modo de pago de débito directo SEPA para clientes
+            sepa_payment_mode = self.env["account.payment.mode"].search([
+                ("payment_method_id.code", "=", "sepa_direct_debit"),
+                ("payment_type", "=", "inbound"),
+            ], limit=1)
+
+            if sepa_payment_mode:
+                partner = self.env["res.partner"].browse(partner_id)
+                partner.write({"customer_payment_mode_id": sepa_payment_mode.id})
+                print(f"Asignado modo de pago SEPA Direct Debit (ID: {sepa_payment_mode.id}) al partner {partner_id}")
+            else:
+                print("No se encontró el modo de pago SEPA Direct Debit")
+
+        return bank_id
 
     def _map_payment(self, value):
         """Mapea el método de pago"""
