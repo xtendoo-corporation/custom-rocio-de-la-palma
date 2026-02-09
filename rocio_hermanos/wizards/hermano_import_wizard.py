@@ -143,8 +143,6 @@ class RocioHermanoImportWizard(models.TransientModel):
         if not zip_str or len(zip_str) != 5 or not zip_str.isdigit():
             return {}
 
-        print(f"Intentando autocompletado español para CP: {zip_str}")
-
         try:
             # Método 1: Intentar usar directamente l10n_es_toponyms
             if 'res.better.zip' in self.env:
@@ -158,7 +156,6 @@ class RocioHermanoImportWizard(models.TransientModel):
                         'city': better_zip.city,
                         'state_id': better_zip.state_id.id if better_zip.state_id else False,
                     }
-                    print(f"Encontrado en better_zip: {result}")
                     return result
 
             # Método 2: Crear partner temporal y usar onchange
@@ -172,7 +169,6 @@ class RocioHermanoImportWizard(models.TransientModel):
 
             for method_name in methods_to_try:
                 if hasattr(temp_partner, method_name):
-                    print(f"Ejecutando {method_name}")
                     try:
                         method = getattr(temp_partner, method_name)
                         method()
@@ -182,10 +178,8 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 'city': temp_partner.city,
                                 'state_id': temp_partner.state_id.id if temp_partner.state_id else False,
                             }
-                            print(f"Autocompletado con {method_name}: {result}")
                             return result
-                    except Exception as e:
-                        print(f"Error en {method_name}: {e}")
+                    except Exception:
                         continue
 
             # Método 3: Buscar directamente en res.country.state por código postal
@@ -216,11 +210,10 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                 if state:
                     result = {'state_id': state.id}
-                    print(f"Autocompletado por código provincial: {province_name} -> {result}")
                     return result
 
-        except Exception as e:
-            print(f"Error en autocompletado español: {e}")
+        except Exception:
+            pass
 
         return {}
 
@@ -258,9 +251,6 @@ class RocioHermanoImportWizard(models.TransientModel):
             if sepa_payment_mode:
                 partner = self.env["res.partner"].browse(partner_id)
                 partner.write({"customer_payment_mode_id": sepa_payment_mode.id})
-                print(f"Asignado modo de pago SEPA Direct Debit (ID: {sepa_payment_mode.id}) al partner {partner_id}")
-            else:
-                print("No se encontró o no se pudo crear el modo de pago SEPA Direct Debit")
 
         return bank_id
 
@@ -277,6 +267,19 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         # En cualquier otro caso, inglés
         return "en_US"
+
+    def _map_payment(self, value):
+        """Mapea el método de pago del Excel al valor de Selection"""
+        if not value:
+            return False
+        value_str = str(value).strip()
+        if value_str == "Banco":
+            return "Banco"
+        if value_str == "Recibo":
+            return "efectivo"
+        if value_str in ("Otra Dirección", "Otra direccion", "otra direccion"):
+            return "otra direccion"
+        return False
 
     def action_import(self):
         """Importa los hermanos desde el archivo Excel"""
@@ -295,9 +298,6 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         # Obtener encabezados
         headers = {cell.value: i for i, cell in enumerate(sheet[1]) if cell.value}
-        print(f"=== ENCABEZADOS ENCONTRADOS ===")
-        print(f"Headers: {list(headers.keys())}")
-        print(f"Total columnas: {len(headers)}")
 
         # Validar que el archivo tenga las columnas necesarias
         required_columns = ["name"]
@@ -320,10 +320,12 @@ class RocioHermanoImportWizard(models.TransientModel):
                 # Mapear fila a diccionario usando encabezados
                 row_data = {h: row[i] for h, i in headers.items() if i < len(row)}
 
-                print(f"\n=== FILA {row_idx} ===")
-                print(f"Datos completos de la fila:")
-                for key, value in row_data.items():
-                    print(f"  {key}: '{value}' (tipo: {type(value)})")
+                # Validar que REGISTRO (ref) está presente - es obligatorio
+                ref_value = self._to_str(row_data.get("REGISTRO"))
+                if not ref_value:
+                    error_count += 1
+                    log_lines.append(_("Fila %s: Campo REGISTRO (referencia) obligatorio y vacío") % row_idx)
+                    continue
 
                 contact_name = row_data.get("name")
                 if not contact_name:
@@ -333,45 +335,33 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                 # Obtener país primero
                 country_id = self._get_country_id(row_data.get("País"))
-                print(f"País obtenido: {row_data.get('País')} -> ID: {country_id}")
-                print(f"Ciudad obtenida: '{row_data.get('Ciudad')}'")
-                print(f"Street obtenida: '{row_data.get('Street')}'")
 
                 # Buscar código postal en diferentes formatos posibles
                 zip_code = row_data.get("zip_code") or row_data.get("C.P.") or row_data.get("C POSTAL")
-                print(f"DEBUG - CP bruto del Excel: '{zip_code}' (tipo: {type(zip_code)})")
                 zip_code = self._to_str(zip_code)
-                print(f"DEBUG - CP después de _to_str: '{zip_code}'")
 
                 # Obtener ciudad del Excel
                 city = self._to_str(row_data.get("city") or row_data.get("Ciudad"))
-                print(f"DEBUG - Ciudad leída del Excel: '{city}'")
 
                 # Obtener provincia/estado del Excel (buscar por nombre)
                 state_name = self._to_str(row_data.get("state_id") or row_data.get("State_id") or row_data.get("PROVINCIA"))
-                print(f"DEBUG - Provincia leída del Excel: '{state_name}'")
 
                 state_id = False
                 if state_name:
                     # Primero buscar con país si lo tenemos
                     if country_id:
                         state_id = self._get_state_id(country_id, state_name)
-                        print(f"DEBUG - Búsqueda con país {country_id}: state_id={state_id}")
 
                     # Si no encontramos el estado, buscar sin país
                     if not state_id:
                         state = self.env["res.country.state"].search([
                             ("name", "ilike", state_name.strip())
                         ], limit=1)
-                        print(f"DEBUG - Búsqueda sin país: {state.name if state else 'No encontrado'}")
                         if state:
                             state_id = state.id
                             # Si encontramos estado, usar su país
                             if not country_id:
                                 country_id = state.country_id.id
-                                print(f"DEBUG - País determinado por provincia: {country_id}")
-
-                print(f"Antes autocompletado: Ciudad='{city}', CP='{zip_code}', Estado={state_id}")
 
                 # Si hay código postal, intentar autocompletar
                 if zip_code:
@@ -381,12 +371,10 @@ class RocioHermanoImportWizard(models.TransientModel):
                         spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
                         if spain:
                             country_id = spain.id
-                            print(f"País determinado por CP: España")
 
                     if country_id:
                         spain = self.env["res.country"].browse(country_id)
                         if spain and spain.code == "ES":
-                            print(f"Es España, intentando autocompletar con CP: {zip_code}")
                             autocomplete_data = self._autocomplete_spanish_address(zip_code, country_id)
                             if autocomplete_data:
                                 # Solo usar ciudad si no la tenemos
@@ -395,43 +383,18 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 # Solo usar estado si no lo tenemos
                                 if not state_id:
                                     state_id = autocomplete_data.get('state_id', state_id)
-                                # IMPORTANTE: No cambiar el país si ya teníamos uno
-                                # country_id ya está establecido correctamente
-                                print(f"Después autocompletado: Ciudad='{city}', Estado={state_id}")
-                            else:
-                                print("No se pudo autocompletar")
                         else:
-                            print(f"No es España (código: {spain.code if spain else 'None'})")
-                    else:
-                        print("Sin país determinado para autocompletar")
-
-                # Validar consistencia entre país y código postal
-                if country_id and zip_code:
-                    country = self.env["res.country"].browse(country_id)
-                    if country.code == "ES" and len(zip_code) == 5 and zip_code.isdigit():
-                        print(f"✓ Consistencia España-CP: {zip_code} es válido para España")
-                    elif country.code != "ES" and len(zip_code) == 5 and zip_code.isdigit():
-                        print(f"⚠ Posible inconsistencia: CP {zip_code} parece español pero país es {country.name}")
-                        # Opción: cambiar país a España si el CP es claramente español
-                        if zip_code.startswith(('0', '1', '2', '3', '4', '5')):
-                            spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
-                            if spain:
-                                print(f"Cambiando país a España por CP {zip_code}")
-                                country_id = spain.id
+                            pass
 
                 # Debug de fechas
                 birth_date_raw = row_data.get("brother_birth_date") or row_data.get("NACIMIENTO")
-                print(f"DEBUG - Fecha nacimiento bruta: '{birth_date_raw}' (tipo: {type(birth_date_raw)})")
                 birth_date_parsed = self._to_date(birth_date_raw)
-                print(f"DEBUG - Fecha nacimiento parseada: '{birth_date_parsed}'")
 
                 since_date_raw = row_data.get("F ALTA")
-                print(f"DEBUG - Fecha alta bruta: '{since_date_raw}' (tipo: {type(since_date_raw)})")
                 since_date_parsed = self._to_date(since_date_raw)
-                print(f"DEBUG - Fecha alta parseada: '{since_date_parsed}'")
 
                 vals = {
-                    "ref": self._to_str(row_data.get("REGISTRO")),
+                    "ref": ref_value,
                     "name": contact_name,
                     "street": self._to_str(row_data.get("Street") or row_data.get("DIRECCION")),
                     "zip": zip_code,
@@ -445,6 +408,7 @@ class RocioHermanoImportWizard(models.TransientModel):
                     "brother_since": since_date_parsed,
                     "brother_end_date": self._to_date(row_data.get("F BAJA")),
                     "brother_advertising": self._to_bool(row_data.get("PUBLI")),
+                    "brother_method_of_payment": self._map_payment(row_data.get("F DE PAGO")),
                     "brother_delegated_partner_id": self._get_partner_id_by_name(
                         row_data.get("DIRECCION DE COBRO")
                     ),
@@ -452,29 +416,23 @@ class RocioHermanoImportWizard(models.TransientModel):
                     "state_id": state_id,
                 }
 
-                print(f"Valores finales para crear/actualizar contacto:")
-                for key, value in vals.items():
-                    print(f"  {key}: '{value}'")
+
 
                 # Buscar si el contacto ya existe por ref (referencia única)
-                ref_value = vals.get("ref")
                 existing_partner = False
 
                 if ref_value:
                     existing_partner = self.env["res.partner"].search(
                         [("ref", "=", ref_value)], limit=1
                     )
-                    print(f"Buscando hermano existente con ref='{ref_value}': {'Encontrado' if existing_partner else 'No encontrado'}")
                 else:
                     # Si no hay ref, buscar por nombre como fallback
                     existing_partner = self.env["res.partner"].search(
                         [("name", "=", contact_name)], limit=1
                     )
-                    print(f"Sin ref, buscando por nombre='{contact_name}': {'Encontrado' if existing_partner else 'No encontrado'}")
 
                 if existing_partner:
                     # ACTUALIZAR contacto existente
-                    print(f"ACTUALIZANDO contacto existente: {contact_name}")
                     try:
                         existing_partner.write(vals)
                         partner_id = existing_partner.id
@@ -484,11 +442,9 @@ class RocioHermanoImportWizard(models.TransientModel):
                         error_msg = str(e)
                         if "difiere del de la ubicación" in error_msg and zip_code:
                             # Error de inconsistencia país-código postal, intentar corregir
-                            print(f"Error de inconsistencia país-CP, intentando corregir...")
                             spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
                             if spain:
                                 vals["country_id"] = spain.id
-                                print(f"Corregido país a España para {contact_name}")
                                 existing_partner.write(vals)
                                 partner_id = existing_partner.id
                                 updated_count += 1
@@ -499,7 +455,6 @@ class RocioHermanoImportWizard(models.TransientModel):
                             raise e
                 else:
                     # CREAR nuevo contacto
-                    print(f"CREANDO nuevo contacto: {contact_name}")
                     try:
                         partner = self.env["res.partner"].create(vals)
                         partner_id = partner.id
@@ -509,11 +464,9 @@ class RocioHermanoImportWizard(models.TransientModel):
                         error_msg = str(e)
                         if "difiere del de la ubicación" in error_msg and zip_code:
                             # Error de inconsistencia país-código postal, intentar corregir
-                            print(f"Error de inconsistencia país-CP, intentando corregir...")
                             spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
                             if spain:
                                 vals["country_id"] = spain.id
-                                print(f"Corregido país a España para {contact_name}")
                                 partner = self.env["res.partner"].create(vals)
                                 partner_id = partner.id
                                 created_count += 1
@@ -525,13 +478,24 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                 # Crear o actualizar cuenta bancaria si existe en el Excel
                 if "Banco" in row_data and row_data.get("Banco"):
-                    print(f"Procesando cuenta bancaria: {row_data.get('Banco')}")
                     self._create_or_update_bank_account(
                         partner_id, row_data.get("Banco")
                     )
                     log_lines.append(
                         _("  → Cuenta bancaria asignada: %s") % row_data.get("Banco")
                     )
+
+                # Si el método de pago es "Banco", asignar el modo de pago SEPA Direct Debit
+                payment_method = self._map_payment(row_data.get("F DE PAGO"))
+                if payment_method == "Banco":
+                    sepa_payment_mode = self.env['account.payment.mode']._create_sepa_direct_debit_mode_if_not_exists()
+                    if sepa_payment_mode:
+                        partner = self.env["res.partner"].browse(partner_id)
+                        partner.write({"customer_payment_mode_id": sepa_payment_mode.id})
+
+                # Print final con el nombre registrado
+                partner = self.env["res.partner"].browse(partner_id)
+                print(f"✓ Registrado: {partner.name}")
 
             except Exception as e:
                 error_count += 1

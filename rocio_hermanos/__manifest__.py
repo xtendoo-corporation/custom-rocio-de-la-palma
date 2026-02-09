@@ -12,7 +12,6 @@
         "account",
         "sale",
         "product",
-        "account_sepa_direct_debit",
         "account_payment_mode",
         "account_payment_order",
         "account_payment_sale",
