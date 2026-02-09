@@ -252,33 +252,22 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         # Si se obtuvo una cuenta bancaria válida, asignar el modo de pago SEPA Direct Debit
         if bank_id:
-            # Buscar el modo de pago de débito directo SEPA para clientes
-            sepa_payment_mode = self.env["account.payment.mode"].search([
-                ("payment_method_id.code", "=", "sepa_direct_debit"),
-                ("payment_type", "=", "inbound"),
-            ], limit=1)
+            # Usar el método seguro que crea el modo de pago si no existe
+            sepa_payment_mode = self.env['account.payment.mode']._create_sepa_direct_debit_mode_if_not_exists()
 
             if sepa_payment_mode:
                 partner = self.env["res.partner"].browse(partner_id)
                 partner.write({"customer_payment_mode_id": sepa_payment_mode.id})
                 print(f"Asignado modo de pago SEPA Direct Debit (ID: {sepa_payment_mode.id}) al partner {partner_id}")
             else:
-                print("No se encontró el modo de pago SEPA Direct Debit")
+                print("No se encontró o no se pudo crear el modo de pago SEPA Direct Debit")
 
         return bank_id
-
-    def _map_payment(self, value):
-        """Mapea el método de pago"""
-        if value == "Banco":
-            return "Banco"
-        if value == "Recibo":
-            return "efectivo"
-        return False
 
     def _map_language(self, value):
         """Mapea el idioma según el valor del campo lang"""
         if not value:
-            return "en_US"  # Inglés por defecto
+            return "es_ES"  # Español por defecto
 
         value_str = str(value).strip().lower()
 
@@ -456,9 +445,6 @@ class RocioHermanoImportWizard(models.TransientModel):
                     "brother_since": since_date_parsed,
                     "brother_end_date": self._to_date(row_data.get("F BAJA")),
                     "brother_advertising": self._to_bool(row_data.get("PUBLI")),
-                    "brother_method_of_payment": self._map_payment(
-                        row_data.get("F DE PAGO")
-                    ),
                     "brother_delegated_partner_id": self._get_partner_id_by_name(
                         row_data.get("DIRECCION DE COBRO")
                     ),

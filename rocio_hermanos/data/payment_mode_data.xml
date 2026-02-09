@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Modo de pago: Domiciliación bancaria (Débito directo SEPA para clientes) -->
+        <record id="account_payment_mode_sepa_direct_debit" model="account.payment.mode">
+            <field name="name">Domiciliación bancaria</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="payment_method_id" ref="account_banking_sepa_direct_debit.sepa_direct_debit"/>
+            <field name="payment_type">inbound</field>
+            <field name="bank_account_link">variable</field>
+        </record>
+    </data>
+</odoo>
+
