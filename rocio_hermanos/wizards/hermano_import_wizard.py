@@ -219,13 +219,15 @@ class RocioHermanoImportWizard(models.TransientModel):
 
 
     def _create_or_update_bank_account(self, partner_id, acc_number):
-        """Crea o actualiza la cuenta bancaria del contacto"""
+        """Crea o actualiza la cuenta bancaria del contacto y crea mandato SEPA"""
         if not acc_number:
             return False
 
         acc_number_str = str(acc_number).strip()
         if not acc_number_str:
             return False
+
+        company = self.env.company
 
         # Buscar si ya existe una cuenta bancaria con ese número para este partner
         existing_bank = self.env["res.partner.bank"].search(
@@ -234,23 +236,47 @@ class RocioHermanoImportWizard(models.TransientModel):
         )
 
         bank_id = False
+        bank_record = False
         if existing_bank:
             bank_id = existing_bank.id
+            bank_record = existing_bank
         else:
-            # Si no existe, crear nueva cuenta bancaria
-            bank = self.env["res.partner.bank"].create(
-                {"acc_number": acc_number_str, "partner_id": partner_id}
-            )
-            bank_id = bank.id
+            # Si no existe, crear nueva cuenta bancaria con company_id
+            bank_record = self.env["res.partner.bank"].create({
+                "acc_number": acc_number_str,
+                "partner_id": partner_id,
+                "company_id": company.id,
+            })
+            bank_id = bank_record.id
 
-        # Si se obtuvo una cuenta bancaria válida, asignar el modo de pago SEPA Direct Debit
-        if bank_id:
+        # Si se obtuvo una cuenta bancaria válida, crear mandato SEPA y asignar modo de pago
+        if bank_id and bank_record:
             # Usar el método seguro que crea el modo de pago si no existe
             sepa_payment_mode = self.env['account.payment.mode']._create_sepa_direct_debit_mode_if_not_exists()
 
             if sepa_payment_mode:
                 partner = self.env["res.partner"].browse(partner_id)
                 partner.write({"customer_payment_mode_id": sepa_payment_mode.id})
+
+            # Crear mandato SEPA si no existe uno válido para esta cuenta bancaria
+            existing_mandate = self.env["account.banking.mandate"].search([
+                ("partner_bank_id", "=", bank_id),
+                ("state", "=", "valid"),
+                ("company_id", "=", company.id),
+            ], limit=1)
+
+            if not existing_mandate:
+                # Crear mandato SEPA válido automáticamente
+                self.env["account.banking.mandate"].create({
+                    "format": "sepa",
+                    "type": "recurrent",
+                    "recurrent_sequence_type": "first",
+                    "signature_date": fields.Date.today(),
+                    "partner_bank_id": bank_id,
+                    "company_id": company.id,
+                    "state": "valid",
+                    "scheme": "CORE",  # Esquema SEPA CORE para particulares
+                })
 
         return bank_id
 
