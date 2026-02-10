@@ -280,6 +280,58 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         return bank_id
 
+    def _get_or_create_manual_payment_mode(self):
+        """Obtiene o crea un modo de pago manual (Recibo) para clientes"""
+        company = self.env.company
+
+        # Buscar modo de pago manual existente
+        manual_mode = self.env["account.payment.mode"].search([
+            ("name", "ilike", "Recibo"),
+            ("company_id", "=", company.id),
+            ("payment_type", "=", "inbound"),
+        ], limit=1)
+
+        if not manual_mode:
+            # Buscar también por "Manual" o "Efectivo"
+            manual_mode = self.env["account.payment.mode"].search([
+                "|", "|",
+                ("name", "ilike", "Manual"),
+                ("name", "ilike", "Efectivo"),
+                ("name", "ilike", "Cash"),
+                ("company_id", "=", company.id),
+                ("payment_type", "=", "inbound"),
+            ], limit=1)
+
+        if not manual_mode:
+            # Si no existe, intentar crear uno
+            try:
+                # Buscar método de pago manual
+                manual_method = self.env["account.payment.method"].search([
+                    ("code", "=", "manual"),
+                    ("payment_type", "=", "inbound"),
+                ], limit=1)
+
+                if manual_method:
+                    # Buscar un diario de banco o efectivo
+                    journal = self.env["account.journal"].search([
+                        ("type", "in", ["bank", "cash"]),
+                        ("company_id", "=", company.id),
+                    ], limit=1)
+
+                    if journal:
+                        manual_mode = self.env["account.payment.mode"].create({
+                            "name": "Recibo",
+                            "company_id": company.id,
+                            "bank_account_link": "fixed",
+                            "fixed_journal_id": journal.id,
+                            "payment_method_id": manual_method.id,
+                            "payment_type": "inbound",
+                        })
+            except Exception:
+                pass
+
+        return manual_mode
+
     def _map_language(self, value):
         """Mapea el idioma según el valor del campo lang"""
         if not value:
@@ -430,18 +482,25 @@ class RocioHermanoImportWizard(models.TransientModel):
 
 
 
-                # Buscar si el contacto ya existe por ref (referencia única)
+                # Buscar si el contacto ya existe
+                # IMPORTANTE: Usamos UN SOLO método de búsqueda, no ambos
+                # Si hay ref → buscar SOLO por ref
+                # Si no hay ref → buscar SOLO por nombre
                 existing_partner = False
+                search_method = None
 
                 if ref_value:
+                    # Búsqueda exclusiva por referencia
                     existing_partner = self.env["res.partner"].search(
                         [("ref", "=", ref_value)], limit=1
                     )
+                    search_method = "ref"
                 else:
-                    # Si no hay ref, buscar por nombre como fallback
+                    # Búsqueda exclusiva por nombre (solo si no hay ref)
                     existing_partner = self.env["res.partner"].search(
                         [("name", "=", contact_name)], limit=1
                     )
+                    search_method = "name"
 
                 if existing_partner:
                     # ACTUALIZAR contacto existente
@@ -449,7 +508,7 @@ class RocioHermanoImportWizard(models.TransientModel):
                         existing_partner.write(vals)
                         partner_id = existing_partner.id
                         updated_count += 1
-                        log_lines.append(_("Actualizado: %s") % contact_name)
+                        log_lines.append(_("Actualizado (por %s): %s") % (search_method, contact_name))
                     except Exception as e:
                         error_msg = str(e)
                         if "difiere del de la ubicación" in error_msg and zip_code:
@@ -460,7 +519,7 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 existing_partner.write(vals)
                                 partner_id = existing_partner.id
                                 updated_count += 1
-                                log_lines.append(_("Actualizado (país corregido): %s") % contact_name)
+                                log_lines.append(_("Actualizado (por %s, país corregido): %s") % (search_method, contact_name))
                             else:
                                 raise e
                         else:
@@ -488,22 +547,25 @@ class RocioHermanoImportWizard(models.TransientModel):
                         else:
                             raise e
 
-                # Crear o actualizar cuenta bancaria si existe en el Excel
-                if "Banco" in row_data and row_data.get("Banco"):
-                    self._create_or_update_bank_account(
-                        partner_id, row_data.get("Banco")
-                    )
-                    log_lines.append(
-                        _("  → Cuenta bancaria asignada: %s") % row_data.get("Banco")
-                    )
+                # Determinar método de pago basándose en si hay cuenta bancaria
+                # Si columna "Banco" tiene datos → Domiciliación bancaria (SEPA)
+                # Si columna "Banco" está vacía → Recibo (pago manual)
+                banco_value = self._to_str(row_data.get("Banco"))
+                partner = self.env["res.partner"].browse(partner_id)
 
-                # Si el método de pago es "Banco", asignar el modo de pago SEPA Direct Debit
-                payment_method = self._map_payment(row_data.get("F DE PAGO"))
-                if payment_method == "Banco":
-                    sepa_payment_mode = self.env['account.payment.mode']._create_sepa_direct_debit_mode_if_not_exists()
-                    if sepa_payment_mode:
-                        partner = self.env["res.partner"].browse(partner_id)
-                        partner.write({"customer_payment_mode_id": sepa_payment_mode.id})
+                if banco_value:
+                    # BANCO: Crear cuenta bancaria + mandato SEPA + asignar modo de pago SEPA
+                    self._create_or_update_bank_account(partner_id, banco_value)
+                    log_lines.append(
+                        _("  → Cuenta bancaria asignada: %s") % banco_value
+                    )
+                    log_lines.append(_("  → Modo de pago: Domiciliación SEPA"))
+                else:
+                    # RECIBO: Sin cuenta bancaria, buscar o crear modo de pago manual
+                    manual_payment_mode = self._get_or_create_manual_payment_mode()
+                    if manual_payment_mode:
+                        partner.write({"customer_payment_mode_id": manual_payment_mode.id})
+                    log_lines.append(_("  → Modo de pago: Recibo"))
 
                 # Print final con el nombre registrado
                 partner = self.env["res.partner"].browse(partner_id)
