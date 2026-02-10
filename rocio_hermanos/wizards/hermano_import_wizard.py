@@ -294,19 +294,6 @@ class RocioHermanoImportWizard(models.TransientModel):
         # En cualquier otro caso, inglés
         return "en_US"
 
-    def _map_payment(self, value):
-        """Mapea el método de pago del Excel al valor de Selection"""
-        if not value:
-            return False
-        value_str = str(value).strip()
-        if value_str == "Banco":
-            return "Banco"
-        if value_str == "Recibo":
-            return "efectivo"
-        if value_str in ("Otra Dirección", "Otra direccion", "otra direccion"):
-            return "otra direccion"
-        return False
-
     def action_import(self):
         """Importa los hermanos desde el archivo Excel"""
         self.ensure_one()
@@ -434,7 +421,6 @@ class RocioHermanoImportWizard(models.TransientModel):
                     "brother_since": since_date_parsed,
                     "brother_end_date": self._to_date(row_data.get("F BAJA")),
                     "brother_advertising": self._to_bool(row_data.get("PUBLI")),
-                    "brother_method_of_payment": self._map_payment(row_data.get("F DE PAGO")),
                     "brother_delegated_partner_id": self._get_partner_id_by_name(
                         row_data.get("DIRECCION DE COBRO")
                     ),

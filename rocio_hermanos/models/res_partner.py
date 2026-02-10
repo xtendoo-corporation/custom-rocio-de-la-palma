@@ -27,6 +27,8 @@ class ResPartner(models.Model):
             ("otra direccion", "Otra Dirección"),
         ],
         string="Método de pago",
+        compute="_compute_brother_method_of_payment",
+        store=True,
         tracking=True,
     )
     brother_delegated_partner_id = fields.Many2one(
@@ -62,6 +64,29 @@ class ResPartner(models.Model):
     def _compute_brother_active(self):
         for rec in self:
             rec.brother_active = bool(rec.is_brother and not rec.brother_end_date)
+
+    @api.depends("bank_ids", "bank_ids.mandate_ids", "bank_ids.mandate_ids.state")
+    def _compute_brother_method_of_payment(self):
+        for rec in self:
+            # Si el partner tiene una cuenta bancaria con un mandato válido, el método de pago es "Banco"
+            has_bank_and_mandate = False
+            if rec.bank_ids:
+                for bank in rec.bank_ids:
+                    if bank.mandate_ids:
+                        valid_mandates = bank.mandate_ids.filtered(
+                            lambda m: m.state == "valid"
+                        )
+                        if valid_mandates:
+                            has_bank_and_mandate = True
+                            break
+
+            if has_bank_and_mandate:
+                rec.brother_method_of_payment = "Banco"
+            else:
+                # Si no tiene banco y mandato, mantener el valor actual o dejarlo vacío
+                # Para evitar sobreescribir valores existentes, solo calculamos si es "Banco"
+                if not rec.brother_method_of_payment:
+                    rec.brother_method_of_payment = False
 
     @api.model_create_multi
     def create(self, vals_list):
