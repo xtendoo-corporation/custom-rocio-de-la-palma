@@ -7,78 +7,54 @@ class AccountPaymentMode(models.Model):
 
     @api.model
     def _create_sepa_direct_debit_mode_if_not_exists(self):
-        """Crea el modo de pago SEPA Direct Debit si no existe"""
-        # Buscar si ya existe el registro con el external ID
-        mode = self.env.ref(
-            'rocio_hermanos.account_payment_mode_sepa_direct_debit',
-            raise_if_not_found=False
-        )
+        """Obtiene o crea el modo de pago SEPA Direct Debit para clientes (inbound)"""
+        import logging
+        _logger = logging.getLogger(__name__)
 
-        if mode:
-            return mode
+        # 1. Buscar por método de pago con código sepa_direct_debit o sepa.sdd
+        sepa_mode = self.search([
+            ('payment_method_id.code', 'in', ['sepa_direct_debit', 'sepa.sdd']),
+            ('payment_type', '=', 'inbound'),
+            ('company_id', '=', self.env.company.id),
+        ], limit=1)
 
-        # Si no existe, buscarlo por criterios
-        payment_method = self.env.ref(
-            'account_banking_sepa_direct_debit.sepa_direct_debit',
-            raise_if_not_found=False
-        )
+        if sepa_mode:
+            _logger.info(f"Modo de pago SEPA encontrado: {sepa_mode.name} (ID: {sepa_mode.id})")
+            return sepa_mode
 
-        if not payment_method:
-            return False
-
-        # Buscar si existe un modo con estos criterios
-        existing_mode = self.search([
-            ('payment_method_id', '=', payment_method.id),
+        # 2. Si no existe, buscar el método de pago SEPA Direct Debit
+        payment_method = self.env['account.payment.method'].search([
+            ('code', 'in', ['sepa_direct_debit', 'sepa.sdd']),
             ('payment_type', '=', 'inbound'),
         ], limit=1)
 
-        if existing_mode:
-            # Crear el external ID si no existe
-            existing_data = self.env['ir.model.data'].search([
-                ('module', '=', 'rocio_hermanos'),
-                ('name', '=', 'account_payment_mode_sepa_direct_debit'),
-            ], limit=1)
-            if not existing_data:
-                self.env['ir.model.data'].create({
-                    'module': 'rocio_hermanos',
-                    'name': 'account_payment_mode_sepa_direct_debit',
-                    'model': 'account.payment.mode',
-                    'res_id': existing_mode.id,
-                    'noupdate': True,
-                })
-            return existing_mode
+        if not payment_method:
+            _logger.error("Método de pago SEPA Direct Debit no encontrado. ¿Está instalado account_banking_sepa_direct_debit?")
+            return False
 
-        # Buscar un diario bancario para asignar al modo de pago
+        # 3. Buscar un diario bancario
         bank_journal = self.env['account.journal'].search([
             ('type', '=', 'bank'),
             ('company_id', '=', self.env.company.id),
         ], limit=1)
 
         if not bank_journal:
-            # Si no hay diario bancario, no podemos crear el modo de pago
+            _logger.error("No hay diario bancario disponible para crear modo de pago SEPA")
             return False
 
-        # Si no existe, crearlo
+        # 4. Crear el modo de pago SEPA
         try:
-            new_mode = self.create({
-                'name': 'Domiciliación bancaria SEPA',
+            sepa_mode = self.create({
+                'name': 'Adeudo directo SEPA de clientes',
                 'company_id': self.env.company.id,
                 'payment_method_id': payment_method.id,
                 'payment_type': 'inbound',
                 'bank_account_link': 'variable',
                 'fixed_journal_id': bank_journal.id,
             })
-
-            # Crear el external ID
-            self.env['ir.model.data'].create({
-                'module': 'rocio_hermanos',
-                'name': 'account_payment_mode_sepa_direct_debit',
-                'model': 'account.payment.mode',
-                'res_id': new_mode.id,
-                'noupdate': True,
-            })
-
-            return new_mode
-        except Exception:
+            _logger.info(f"Modo de pago SEPA creado: {sepa_mode.name} (ID: {sepa_mode.id})")
+            return sepa_mode
+        except Exception as e:
+            _logger.error(f"Error al crear modo de pago SEPA: {str(e)}")
             return False
 

@@ -25,7 +25,7 @@
 
                 <notebook invisible="not log_message">
                     <page string="Log de importación">
-                        <field name="log_message" readonly="1" nolabel="1"/>
+                        <field name="log_message" readonly="1" nolabel="1" widget="text"/>
                     </page>
                 </notebook>
 
