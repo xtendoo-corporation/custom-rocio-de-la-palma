@@ -221,7 +221,7 @@ class RocioHermanoImportWizard(models.TransientModel):
     def _create_or_update_bank_account(self, partner_id, acc_number):
         """Crea o actualiza la cuenta bancaria del contacto y asigna modo de pago SEPA"""
         import logging
-        _logger = logging.getLogger(__name__)
+        #_logger = logging.getLogger(__name__)
 
         if not acc_number:
             return False, "Número de cuenta vacío"
@@ -233,8 +233,8 @@ class RocioHermanoImportWizard(models.TransientModel):
         company = self.env.company
         partner = self.env["res.partner"].browse(partner_id)
 
-        _logger.info(f"=== PROCESANDO CUENTA BANCARIA PARA: {partner.name} ===")
-        _logger.info(f"    Cuenta: {acc_number_str}")
+        #_logger.info(f"=== PROCESANDO CUENTA BANCARIA PARA: {partner.name} ===")
+        #_logger.info(f"    Cuenta: {acc_number_str}")
 
         try:
             # 1. Crear o actualizar cuenta bancaria
@@ -245,7 +245,7 @@ class RocioHermanoImportWizard(models.TransientModel):
 
             if existing_bank:
                 bank_id = existing_bank.id
-                _logger.info(f"    ✓ Cuenta bancaria ya existe (ID: {bank_id})")
+                #_logger.info(f"    ✓ Cuenta bancaria ya existe (ID: {bank_id})")
             else:
                 try:
                     bank_record = self.env["res.partner.bank"].create({
@@ -254,13 +254,13 @@ class RocioHermanoImportWizard(models.TransientModel):
                         "company_id": company.id,
                     })
                     bank_id = bank_record.id
-                    _logger.info(f"    ✓ Cuenta bancaria CREADA (ID: {bank_id})")
+                    #_logger.info(f"    ✓ Cuenta bancaria CREADA (ID: {bank_id})")
                 except Exception as e:
-                    _logger.error(f"    ✗ ERROR al crear cuenta bancaria: {str(e)}")
+                    #_logger.error(f"    ✗ ERROR al crear cuenta bancaria: {str(e)}")
                     return False, f"Error al crear cuenta bancaria: {str(e)}"
 
             # 2. Buscar modo de pago SEPA existente
-            _logger.info(f"    Buscando modo de pago SEPA...")
+            #_logger.info(f"    Buscando modo de pago SEPA...")
             sepa_mode = self.env['account.payment.mode'].search([
                 ('payment_method_id.code', '=', 'sepa_direct_debit'),
                 ('payment_type', '=', 'inbound'),
@@ -268,7 +268,7 @@ class RocioHermanoImportWizard(models.TransientModel):
 
             # 3. Si NO existe, crear UNA SOLA VEZ
             if not sepa_mode:
-                _logger.info(f"    → Modo de pago SEPA no existe, intentando crear...")
+                #_logger.info(f"    → Modo de pago SEPA no existe, intentando crear...")
                 try:
                     sepa_method = self.env['account.payment.method'].search([
                         ('code', '=', 'sepa_direct_debit'),
@@ -290,31 +290,31 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 "payment_method_id": sepa_method.id,
                                 "payment_type": "inbound",
                             })
-                            _logger.info(f"    ✓ Modo de pago SEPA CREADO (ID: {sepa_mode.id})")
+                           # _logger.info(f"    ✓ Modo de pago SEPA CREADO (ID: {sepa_mode.id})")
                         else:
-                            _logger.error(f"    ✗ No se encontró diario bancario")
+                            #_logger.error(f"    ✗ No se encontró diario bancario")
                     else:
-                        _logger.error(f"    ✗ No se encontró método de pago sepa_direct_debit")
+                        #_logger.error(f"    ✗ No se encontró método de pago sepa_direct_debit")
                 except Exception as e:
-                    _logger.error(f"    ✗ Error al crear modo de pago SEPA: {str(e)}")
+                    #_logger.error(f"    ✗ Error al crear modo de pago SEPA: {str(e)}")
                     return bank_id, f"Nota: {str(e)}"
             else:
-                _logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
+                #_logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
 
             # 4. Asignar modo de pago SEPA al hermano si lo encontramos
             if sepa_mode:
                 try:
                     partner.write({"customer_payment_mode_id": sepa_mode.id})
-                    _logger.info(f"    ✓ Modo de pago SEPA ASIGNADO al hermano")
+                    #_logger.info(f"    ✓ Modo de pago SEPA ASIGNADO al hermano")
                 except Exception as e:
-                    _logger.error(f"    ✗ Error al asignar modo de pago: {str(e)}")
+                    #_logger.error(f"    ✗ Error al asignar modo de pago: {str(e)}")
                     return bank_id, f"Nota: Error al asignar modo de pago: {str(e)}"
             else:
-                _logger.error(f"    ✗ No se pudo obtener modo de pago SEPA")
+                #_logger.error(f"    ✗ No se pudo obtener modo de pago SEPA")
                 return bank_id, "Nota: No se pudo obtener modo de pago SEPA"
 
             # 5. AHORA crear el mandato SEPA para esta cuenta bancaria
-            _logger.info(f"    Procesando mandato SEPA...")
+            #_logger.info(f"    Procesando mandato SEPA...")
             try:
                 # Verificar si ya existe un mandato para esta cuenta
                 existing_mandate = self.env["account.banking.mandate"].search([
@@ -323,7 +323,7 @@ class RocioHermanoImportWizard(models.TransientModel):
                 ], limit=1)
 
                 if existing_mandate:
-                    _logger.info(f"    → Mandato existente encontrado (Estado: {existing_mandate.state})")
+                    #_logger.info(f"    → Mandato existente encontrado (Estado: {existing_mandate.state})")
                     # Si existe, validarlo si está en borrador
                     if existing_mandate.state == "draft":
                         try:
@@ -335,31 +335,31 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 "signature_date": existing_mandate.signature_date or fields.Date.today(),
                             })
                             existing_mandate.validate()
-                            _logger.info(f"    ✓ Mandato existente VALIDADO (Ref: {existing_mandate.unique_mandate_reference})")
+                            #_logger.info(f"    ✓ Mandato existente VALIDADO (Ref: {existing_mandate.unique_mandate_reference})")
                             return bank_id, "Mandato existente validado"
                         except Exception as e:
-                            _logger.error(f"    ✗ Error al validar mandato existente: {str(e)}")
+                            #_logger.error(f"    ✗ Error al validar mandato existente: {str(e)}")
                             return bank_id, f"Nota: Error al validar mandato existente: {str(e)}"
                     elif existing_mandate.state == "valid":
-                        _logger.info(f"    ✓ Mandato YA VÁLIDO (Ref: {existing_mandate.unique_mandate_reference})")
+                        #_logger.info(f"    ✓ Mandato YA VÁLIDO (Ref: {existing_mandate.unique_mandate_reference})")
                         return bank_id, None  # Ya tiene mandato válido
                     else:
                         # Estado cancel o expired, intentar reactivar
-                        _logger.info(f"    → Intentando reactivar mandato en estado {existing_mandate.state}...")
+                        #_logger.info(f"    → Intentando reactivar mandato en estado {existing_mandate.state}...")
                         try:
                             if existing_mandate.state == "cancel":
                                 existing_mandate.back2draft()
                                 existing_mandate.validate()
                             elif existing_mandate.state == "expired":
                                 existing_mandate.write({"state": "valid"})
-                            _logger.info(f"    ✓ Mandato REACTIVADO (Ref: {existing_mandate.unique_mandate_reference})")
+                            #_logger.info(f"    ✓ Mandato REACTIVADO (Ref: {existing_mandate.unique_mandate_reference})")
                             return bank_id, "Mandato reactivado"
                         except Exception as e:
-                            _logger.error(f"    ✗ Error al reactivar mandato: {str(e)}")
+                            #_logger.error(f"    ✗ Error al reactivar mandato: {str(e)}")
                             return bank_id, f"Nota: Error al reactivar mandato: {str(e)}"
                 else:
                     # No existe mandato, crear uno nuevo
-                    _logger.info(f"    → No existe mandato, creando uno nuevo...")
+                    #_logger.info(f"    → No existe mandato, creando uno nuevo...")
                     try:
                         # Paso 1: Crear mandato en estado draft
                         mandate = self.env["account.banking.mandate"].create({
@@ -371,24 +371,24 @@ class RocioHermanoImportWizard(models.TransientModel):
                             "company_id": company.id,
                             "scheme": "CORE",
                         })
-                        _logger.info(f"    ✓ Mandato creado en DRAFT (ID: {mandate.id}, Ref: {mandate.unique_mandate_reference})")
+                        #_logger.info(f"    ✓ Mandato creado en DRAFT (ID: {mandate.id}, Ref: {mandate.unique_mandate_reference})")
 
                         # Paso 2: Validar el mandato
                         mandate.validate()
-                        _logger.info(f"    ✓ Mandato VALIDADO correctamente (Estado: {mandate.state})")
+                        #_logger.info(f"    ✓ Mandato VALIDADO correctamente (Estado: {mandate.state})")
 
                         return bank_id, None  # Éxito total
                     except Exception as e:
-                        _logger.error(f"    ✗ ERROR al crear mandato: {str(e)}")
+                        #_logger.error(f"    ✗ ERROR al crear mandato: {str(e)}")
                         import traceback
-                        _logger.error(traceback.format_exc())
+                        #_logger.error(traceback.format_exc())
                         return bank_id, f"Nota: Error al crear mandato: {str(e)}"
             except Exception as e:
-                _logger.error(f"    ✗ ERROR al procesar mandato: {str(e)}")
+                #_logger.error(f"    ✗ ERROR al procesar mandato: {str(e)}")
                 return bank_id, f"Nota: Error al procesar mandato: {str(e)}"
 
         except Exception as e:
-            _logger.error(f"    ✗ ERROR GENERAL: {str(e)}")
+            #_logger.error(f"    ✗ ERROR GENERAL: {str(e)}")
             return False, f"Error general: {str(e)}"
 
     def _get_or_create_manual_payment_mode(self):
