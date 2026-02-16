@@ -221,7 +221,7 @@ class RocioHermanoImportWizard(models.TransientModel):
     def _create_or_update_bank_account(self, partner_id, acc_number):
         """Crea o actualiza la cuenta bancaria del contacto y asigna modo de pago SEPA"""
         import logging
-        #_logger = logging.getLogger(__name__)
+        _logger = logging.getLogger(__name__)
 
         if not acc_number:
             return False, "Número de cuenta vacío"
@@ -290,16 +290,16 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 "payment_method_id": sepa_method.id,
                                 "payment_type": "inbound",
                             })
-                           # _logger.info(f"    ✓ Modo de pago SEPA CREADO (ID: {sepa_mode.id})")
+                            _logger.info(f"    ✓ Modo de pago SEPA CREADO (ID: {sepa_mode.id})")
                         else:
-                            #_logger.error(f"    ✗ No se encontró diario bancario")
+                            _logger.error(f"    ✗ No se encontró diario bancario")
                     else:
-                        #_logger.error(f"    ✗ No se encontró método de pago sepa_direct_debit")
+                        _logger.error(f"    ✗ No se encontró método de pago sepa_direct_debit")
                 except Exception as e:
                     #_logger.error(f"    ✗ Error al crear modo de pago SEPA: {str(e)}")
                     return bank_id, f"Nota: {str(e)}"
             else:
-                #_logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
+                _logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
 
             # 4. Asignar modo de pago SEPA al hermano si lo encontramos
             if sepa_mode:
