@@ -24,7 +24,9 @@ class RocioHermanoImportWizard(models.TransientModel):
     log_message = fields.Text(string="Log de importación", readonly=True)
 
     def _to_date(self, value):
-        """Convierte un valor a fecha. Formatos soportados: MM/DD/YY, DD/MM/YYYY, YYYY-MM-DD"""
+        """Convierte un valor a fecha. Formatos soportados: MM/DD/YY, DD/MM/YYYY, YYYY-MM-DD
+        Para años de 2 dígitos: < 27 → 2000s, >= 27 → 1900s
+        """
         try:
             if value is None or value is False:
                 return False
@@ -43,7 +45,6 @@ class RocioHermanoImportWizard(models.TransientModel):
                 value_str = value_str.split(" ")[0]
 
             # Intentar parsear con diferentes formatos
-            # Orden de prioridad: primero formato Excel MM/DD/YY, luego otros formatos
             formats_to_try = [
                 "%m/%d/%y",    # MM/DD/YY (formato Excel de 2 dígitos) - ej: 02/11/83
                 "%m/%d/%Y",    # MM/DD/YYYY (formato Excel de 4 dígitos)
@@ -56,13 +57,15 @@ class RocioHermanoImportWizard(models.TransientModel):
                 try:
                     parsed_date = datetime.strptime(value_str, fmt)
 
-                    # Ajustar años de 2 dígitos si es necesario
-                    # Python interpreta 00-68 como 2000-2068 y 69-99 como 1969-1999
-                    # Para fechas de nacimiento, ajustar si el año está muy en el futuro
-                    if fmt == "%m/%d/%y" and parsed_date.year > datetime.now().year + 10:
-                        # Si la fecha está más de 10 años en el futuro, probablemente
-                        # debería ser del siglo pasado (ej: 55 -> 1955 no 2055)
-                        parsed_date = parsed_date.replace(year=parsed_date.year - 100)
+                    # Ajustar años de 2 dígitos según regla: < 27 → 2000s, >= 27 → 1900s
+                    if fmt == "%m/%d/%y":
+                        year_2digit = int(value_str.split("/")[-1])
+                        if year_2digit < 27:
+                            # 00-26 → 2000-2026
+                            parsed_date = parsed_date.replace(year=2000 + year_2digit)
+                        else:
+                            # 27-99 → 1927-1999
+                            parsed_date = parsed_date.replace(year=1900 + year_2digit)
 
                     return parsed_date.strftime("%Y-%m-%d")
                 except ValueError:
@@ -470,10 +473,38 @@ class RocioHermanoImportWizard(models.TransientModel):
         try:
             # Decodificar el archivo
             file_content = base64.b64decode(self.file)
-            wb = openpyxl.load_workbook(BytesIO(file_content), data_only=True)
+
+            # Verificar que el contenido no esté vacío
+            if not file_content:
+                raise UserError(_("El archivo está vacío"))
+
+            # Verificar tamaño del archivo
+            file_size_mb = len(file_content) / (1024 * 1024)
+            if file_size_mb > 50:
+                raise UserError(_("El archivo es demasiado grande (%.2f MB). El límite es 50 MB.") % file_size_mb)
+
+            # Intentar cargar el archivo Excel
+            # Nota: read_only=True puede causar problemas con algunos archivos
+            try:
+                wb = openpyxl.load_workbook(BytesIO(file_content), read_only=True, data_only=True)
+            except Exception as e1:
+                # Si falla con read_only, intentar sin él
+                try:
+                    wb = openpyxl.load_workbook(BytesIO(file_content), data_only=True)
+                except Exception as e2:
+                    raise UserError(_("Error al leer el archivo Excel. Asegúrate de que sea un archivo .xlsx válido.\nError 1: %s\nError 2: %s") % (str(e1), str(e2)))
+
             sheet = wb.active
+
+            if not sheet:
+                raise UserError(_("El archivo Excel no tiene hojas"))
+
+        except UserError:
+            raise
         except Exception as e:
-            raise UserError(_("Error al leer el archivo Excel: %s") % str(e))
+            import traceback
+            error_detail = traceback.format_exc()
+            raise UserError(_("Error al leer el archivo Excel: %s\n\nDetalles técnicos:\n%s") % (str(e) or "Error desconocido", error_detail))
 
         # Obtener encabezados
         headers = {cell.value: i for i, cell in enumerate(sheet[1]) if cell.value}
@@ -526,7 +557,7 @@ class RocioHermanoImportWizard(models.TransientModel):
                 country_id = self._get_country_id(row_data.get("País"))
 
                 # Buscar código postal en diferentes formatos posibles
-                zip_code = row_data.get("zip_code") or row_data.get("C.P.") or row_data.get("C POSTAL")
+                zip_code = row_data.get("zip_code") or row_data.get("C.P.") or row_data.get("C POSTAL") or row_data.get("C.POSTAL")
                 zip_code = self._to_str(zip_code)
 
                 # Obtener ciudad del Excel
@@ -605,27 +636,26 @@ class RocioHermanoImportWizard(models.TransientModel):
                 }
 
                 existing_partner = self.env["res.partner"].search(
-                    [("name", "=", contact_name)], limit=1
+                    [("ref", "=", ref_value)], limit=1
                 )
 
                 if existing_partner:
-                    # ACTUALIZAR contacto existente
+                    # ACTUALIZAR contacto existente (encontrado por REGISTRO/ref)
                     try:
                         existing_partner.write(vals)
                         partner_id = existing_partner.id
                         updated_count += 1
-                        log_lines.append(_("Actualizado (por nombre): %s") % contact_name)
+                        log_lines.append(_("Actualizado (ref: %s): %s") % (ref_value, contact_name))
                     except Exception as e:
                         error_msg = str(e)
                         if "difiere del de la ubicación" in error_msg and zip_code:
-                            # Error de inconsistencia país-código postal, intentar corregir
                             spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
                             if spain:
                                 vals["country_id"] = spain.id
                                 existing_partner.write(vals)
                                 partner_id = existing_partner.id
                                 updated_count += 1
-                                log_lines.append(_("Actualizado (por nombre, país corregido): %s") % contact_name)
+                                log_lines.append(_("Actualizado (ref: %s, país corregido): %s") % (ref_value, contact_name))
                             else:
                                 raise e
                         else:
@@ -636,18 +666,17 @@ class RocioHermanoImportWizard(models.TransientModel):
                         partner = self.env["res.partner"].create(vals)
                         partner_id = partner.id
                         created_count += 1
-                        log_lines.append(_("Creado: %s") % contact_name)
+                        log_lines.append(_("Creado (ref: %s): %s") % (ref_value, contact_name))
                     except Exception as e:
                         error_msg = str(e)
                         if "difiere del de la ubicación" in error_msg and zip_code:
-                            # Error de inconsistencia país-código postal, intentar corregir
                             spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
                             if spain:
                                 vals["country_id"] = spain.id
                                 partner = self.env["res.partner"].create(vals)
                                 partner_id = partner.id
                                 created_count += 1
-                                log_lines.append(_("Creado (país corregido): %s") % contact_name)
+                                log_lines.append(_("Creado (ref: %s, país corregido): %s") % (ref_value, contact_name))
                             else:
                                 raise e
                         else:
@@ -708,9 +737,9 @@ class RocioHermanoImportWizard(models.TransientModel):
                     except Exception as e:
                         log_lines.append(_("  ✗ Error al procesar modo de pago manual: %s") % str(e))
 
-                # Print final con el nombre registrado
+                # Print final con la referencia y el nombre registrado
                 partner = self.env["res.partner"].browse(partner_id)
-                print(f"✓ Registrado: {partner.name}")
+                print(f"✓ Registrado: [{partner.ref}] {partner.name}")
 
             except Exception as e:
                 error_count += 1
