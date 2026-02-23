@@ -561,7 +561,7 @@ class RocioHermanoImportWizard(models.TransientModel):
                 zip_code = self._to_str(zip_code)
 
                 # Obtener ciudad del Excel
-                city = self._to_str(row_data.get("city") or row_data.get("Ciudad"))
+                city = self._to_str(row_data.get("POBLACION"))
 
                 # Obtener provincia/estado del Excel (buscar por nombre)
                 state_name = self._to_str(row_data.get("state_id") or row_data.get("State_id") or row_data.get("PROVINCIA"))

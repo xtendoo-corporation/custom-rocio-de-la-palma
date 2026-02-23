@@ -78,6 +78,7 @@
         <field name="priority">1</field>
         <field name="arch" type="xml">
             <list string="Hermanos">
+                <field name="ref"/>
                 <field name="name"/>
                 <field name="street"/>
                 <field name="brother_district"/>
