@@ -52,6 +52,14 @@ class ResPartner(models.Model):
         tracking=True,
     )
 
+    # Antigüedad: posición del hermano activo ordenado por fecha de alta (el más antiguo = 1)
+    brother_seniority = fields.Integer(
+        string="Antigüedad",
+        default=0,
+        help="Número de orden del hermano según su fecha de alta. 1 = el más antiguo. "
+        "Se recalcula automáticamente el 1 de febrero de cada año.",
+    )
+
     # Campo calculado para facilitar dominios: True si es hermano y no tiene fecha de baja.
     brother_active = fields.Boolean(
         string="Hermano activo",
@@ -64,6 +72,30 @@ class ResPartner(models.Model):
     def _compute_brother_active(self):
         for rec in self:
             rec.brother_active = bool(rec.is_brother and not rec.brother_end_date)
+
+    @api.model
+    def action_recompute_brother_seniority(self):
+        """Recalcula la antigüedad de todos los hermanos activos.
+        Los hermanos se ordenan por fecha de alta ascendente (el más antiguo = 1).
+        Los hermanos sin fecha de alta quedan con antigüedad 0.
+        Esta acción se ejecuta manualmente mediante menú o botón de acción."""
+        # Hermanos activos CON fecha de alta, ordenados de más antiguo a más moderno
+        active_brothers = self.search(
+            [("brother_active", "=", True), ("brother_since", "!=", False)],
+            order="brother_since asc",
+        )
+        for idx, brother in enumerate(active_brothers, start=1):
+            brother.brother_seniority = idx
+
+        # Hermanos activos SIN fecha de alta → antigüedad 0
+        brothers_no_date = self.search(
+            [("brother_active", "=", True), ("brother_since", "=", False)]
+        )
+        brothers_no_date.write({"brother_seniority": 0})
+
+        # Hermanos de baja → antigüedad 0
+        inactive_brothers = self.search([("brother_active", "=", False)])
+        inactive_brothers.write({"brother_seniority": 0})
 
     @api.depends("bank_ids", "bank_ids.mandate_ids", "bank_ids.mandate_ids.state")
     def _compute_brother_method_of_payment(self):

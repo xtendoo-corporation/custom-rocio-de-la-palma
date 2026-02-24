@@ -41,6 +41,7 @@
                 <group string="Datos de Hermano" name="brother_data_group" invisible="not is_brother">
                     <group name="brother_main_info">
                         <field name="ref" string="Nº Hermano"/>
+                        <field name="brother_seniority" string="Antigüedad" groups="base.group_user"/>
                         <field name="brother_since" groups="base.group_user"/>
                         <field name="brother_end_date" groups="base.group_user"/>
                         <field name="brother_category" groups="base.group_user" invisible="1"/>
@@ -78,7 +79,7 @@
         <field name="priority">1</field>
         <field name="arch" type="xml">
             <list string="Hermanos">
-                <field name="ref"/>
+                <field name="brother_seniority" string="Antigüedad" optional="show"/>
                 <field name="name"/>
                 <field name="street"/>
                 <field name="brother_district"/>
@@ -92,6 +93,7 @@
                 <field name="brother_advertising"/>
                 <field name="email" optional="hide"/>
                 <field name="phone" optional="hide"/>
+                <field name="ref" optional="hide"/>
             </list>
         </field>
     </record>
