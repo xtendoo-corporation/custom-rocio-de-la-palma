@@ -4,6 +4,9 @@ from io import BytesIO
 from datetime import datetime
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class RocioHermanoImportWizard(models.TransientModel):
@@ -301,8 +304,8 @@ class RocioHermanoImportWizard(models.TransientModel):
                 except Exception as e:
                     #_logger.error(f"    ✗ Error al crear modo de pago SEPA: {str(e)}")
                     return bank_id, f"Nota: {str(e)}"
-            else:
-                _logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
+            #else:
+                #_logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
 
             # 4. Asignar modo de pago SEPA al hermano si lo encontramos
             if sepa_mode:
@@ -560,8 +563,14 @@ class RocioHermanoImportWizard(models.TransientModel):
                 zip_code = row_data.get("zip_code") or row_data.get("C.P.") or row_data.get("C POSTAL") or row_data.get("C.POSTAL")
                 zip_code = self._to_str(zip_code)
 
+                # LOG: Antes de alimentar desde Excel
+                city_pre_excel = ''  # Inicializamos la variable para evitar warning
+                _logger.info(f"===Antes de excel===\n{contact_name} -> {city_pre_excel}")
+
                 # Obtener ciudad del Excel
-                city = self._to_str(row_data.get("POBLACION"))
+                city_excel = self._to_str(row_data.get("POBLACION"))
+                _logger.info(f"===Lo que obtengo del excel===\n{contact_name} -> {city_excel}")
+                city = city_excel
 
                 # Obtener provincia/estado del Excel (buscar por nombre)
                 state_name = self._to_str(row_data.get("state_id") or row_data.get("State_id") or row_data.get("PROVINCIA"))
@@ -583,7 +592,7 @@ class RocioHermanoImportWizard(models.TransientModel):
                             if not country_id:
                                 country_id = state.country_id.id
 
-                # Si hay código postal, intentar autocompletar
+                # Si hay código postal, intentar autocompletar SOLO si city o state_id están vacíos
                 if zip_code:
                     # Si no tenemos país, intentar determinarlo por el código postal
                     if not country_id and len(zip_code) == 5 and zip_code.isdigit():
@@ -605,6 +614,9 @@ class RocioHermanoImportWizard(models.TransientModel):
                                     state_id = autocomplete_data.get('state_id', state_id)
                         else:
                             pass
+
+                # LOG: Una vez finalizado (antes de crear/actualizar partner)
+                _logger.info(f"====Una vez Finalizado===\n{contact_name} -> {city}")
 
                 # Debug de fechas
                 birth_date_raw = row_data.get("brother_birth_date") or row_data.get("NACIMIENTO")

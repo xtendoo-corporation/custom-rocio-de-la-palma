@@ -79,6 +79,7 @@
         <field name="priority">1</field>
         <field name="arch" type="xml">
             <list string="Hermanos">
+                <field name="ref" string="Nº de Hermano"/>
                 <field name="brother_seniority" string="Antigüedad" optional="show"/>
                 <field name="name"/>
                 <field name="street"/>
@@ -93,7 +94,6 @@
                 <field name="brother_advertising"/>
                 <field name="email" optional="hide"/>
                 <field name="phone" optional="hide"/>
-                <field name="ref" optional="hide"/>
             </list>
         </field>
     </record>

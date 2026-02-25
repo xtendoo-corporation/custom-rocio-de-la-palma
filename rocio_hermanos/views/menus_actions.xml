@@ -1,31 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Vista específica para la acción de hermanos (debe ir antes de la acción que la referencia) -->
+    <record id="view_res_partner_search_rocio_hermanos" model="ir.ui.view">
+        <field name="name">res.partner.search.rocio.hermanos</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <filter name="customer" position="after">
+                <filter string="Activos" name="brother_active" domain="[('brother_active','=',True)]"/>
+                <filter string="Inactivos" name="brother_inactive" domain="[('brother_active','=',False)]"/>
+            </filter>
+        </field>
+    </record>
+
     <!-- Acceso a la lista de hermanos (vista tree heredada) -->
     <record id="action_res_partner_rocio_hermanos" model="ir.actions.act_window">
         <field name="name">Hermanos</field>
         <field name="res_model">res.partner</field>
         <field name="view_mode">list,form</field>
-        <field name="domain">[("is_brother","=",True)]</field>
-        <field name="context">{'default_is_brother': True}</field>
+        <!-- Quitamos el dominio fijo para que el filtro sea interactivo y añadimos el filtro por defecto en el contexto -->
+        <field name="context">{'search_default_brother_active': 1, 'default_is_brother': True}</field>
+        <field name="search_view_id" ref="view_res_partner_search_rocio_hermanos"/>
     </record>
 
     <!-- Vista específica para la acción de hermanos -->
     <record id="action_res_partner_rocio_hermanos_view_tree" model="ir.actions.act_window.view">
-        <field name="sequence" eval="1" />
+        <field name="sequence" eval="1"/>
         <field name="view_mode">list</field>
-        <field name="view_id" ref="view_res_partner_tree_rocio_hermanos" />
-        <field name="act_window_id" ref="action_res_partner_rocio_hermanos" />
+        <field name="view_id" ref="view_res_partner_tree_rocio_hermanos"/>
+        <field name="act_window_id" ref="action_res_partner_rocio_hermanos"/>
     </record>
 
+
     <record id="action_res_partner_rocio_hermanos_view_form" model="ir.actions.act_window.view">
-        <field name="sequence" eval="2" />
+        <field name="sequence" eval="2"/>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="view_res_partner_form_inherit_rocio_hermanos" />
-        <field name="act_window_id" ref="action_res_partner_rocio_hermanos" />
+        <field name="view_id" ref="view_res_partner_form_inherit_rocio_hermanos"/>
+        <field name="act_window_id" ref="action_res_partner_rocio_hermanos"/>
     </record>
 
     <menuitem id="menu_rocio_hermanos_list" name="Hermanos" parent="menu_rocio_hermanos"
-        action="action_res_partner_rocio_hermanos" />
+              action="action_res_partner_rocio_hermanos"/>
 
     <!-- Acceso al asistente -->
     <record id="action_rocio_hermano_invoice_wizard" model="ir.actions.act_window">
@@ -33,31 +48,31 @@
         <field name="res_model">rocio.hermano.invoice.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
-        <field name="view_id" ref="view_rocio_hermano_invoice_wizard" />
+        <field name="view_id" ref="view_rocio_hermano_invoice_wizard"/>
     </record>
 
     <menuitem id="menu_rocio_hermanos_generate" name="Generar cuotas" parent="menu_rocio_hermanos"
-        action="action_rocio_hermano_invoice_wizard" />
+              action="action_rocio_hermano_invoice_wizard"/>
 
 
     <!-- Nueva acción servidor: devuelve dinámicamente un act_window filtrado por el diario
     configurado -->
     <record id="action_rocio_hermanos_invoices_server" model="ir.actions.server">
         <field name="name">Facturas de cuotas (filtradas por diario)</field>
-        <field name="model_id" ref="account.model_account_move" />
+        <field name="model_id" ref="account.model_account_move"/>
         <field name="state">code</field>
         <field name="code">action = model.action_invoices_filtered_by_config_journal()</field>
     </record>
 
     <!-- Menú para listar facturas creadas por este módulo -->
     <menuitem id="menu_rocio_hermanos_invoices" name="Facturas de cuotas"
-        parent="menu_rocio_hermanos" action="action_rocio_hermanos_invoices_server" />
+              parent="menu_rocio_hermanos" action="action_rocio_hermanos_invoices_server"/>
 
     <!-- Acción servidor para recalcular antigüedad -->
     <record id="action_rocio_recompute_brother_seniority" model="ir.actions.server">
         <field name="name">Recalcular antigüedad</field>
-        <field name="model_id" ref="base.model_res_partner" />
-        <field name="binding_model_id" ref="base.model_res_partner" />
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
         <field name="state">code</field>
         <field name="code"><![CDATA[
 model.action_recompute_brother_seniority()
@@ -76,6 +91,6 @@ action = {
 
     <!-- Menú para recalcular antigüedad manualmente en la pestaña Gestión de hermanos -->
     <menuitem id="menu_rocio_recompute_brother_seniority" name="Recalcular antigüedad"
-        parent="menu_brother_management" action="action_rocio_recompute_brother_seniority"
-        sequence="30" />
+              parent="menu_brother_management" action="action_rocio_recompute_brother_seniority"
+              sequence="30"/>
 </odoo>
