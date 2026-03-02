@@ -10,6 +10,7 @@
                         <field name="invoice_date"/>
                         <field name="product_id"/>
                         <field name="journal_id"/>
+                        <field name="partner_domain" widget="domain" options="{'model' : 'res.partner'}"/>
                     </group>
                     <footer>
                         <button string="Generar facturas" type="object" name="action_generate_invoices" class="btn-primary"/>

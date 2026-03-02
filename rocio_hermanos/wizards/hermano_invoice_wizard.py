@@ -10,6 +10,7 @@ class RocioHermanoInvoiceWizard(models.TransientModel):
     invoice_date = fields.Date(string='Fecha de factura', default=fields.Date.context_today)
     product_id = fields.Many2one('product.product', string='Producto a facturar')
     journal_id = fields.Many2one('account.journal', string='Diario de ventas', domain=[('type', '=', 'sale')])
+    partner_domain = fields.Char(string='Dominio de búsqueda de hermanos', default='[]')
 
     @api.model
     def default_get(self, fields_list):
@@ -39,9 +40,21 @@ class RocioHermanoInvoiceWizard(models.TransientModel):
         if not journal:
             raise UserError(_('No se ha encontrado ningún diario de ventas. Configure uno en Ajustes o seleccione uno en el asistente.'))
 
-        partners = self.env['res.partner'].search([('brother_active', '=', True)])
+        # Dominio base: siempre hermanos activos
+        domain = [('is_brother', '=', True), ('brother_active', '=', True)]
+
+        # Añadir el filtro personalizado del usuario si existe
+        if self.partner_domain and self.partner_domain != '[]':
+            try:
+                from odoo.osv import expression
+                custom_domain = eval(self.partner_domain)
+                domain = expression.AND([domain, custom_domain])
+            except Exception as e:
+                raise UserError(_('Error en el filtro personalizado: %s') % str(e))
+
+        partners = self.env['res.partner'].search(domain)
         if not partners:
-            raise UserError(_('No se han encontrado hermanos activos para facturar.'))
+            raise UserError(_('No se han encontrado hermanos activos para facturar con los filtros seleccionados.'))
 
         created_invoices = self.env['account.move']
         for partner in partners:
@@ -72,8 +85,22 @@ class RocioHermanoInvoiceWizard(models.TransientModel):
             invoice = self.env['account.move'].create(invoice_vals)
             created_invoices += invoice
 
-        # Acción para mostrar las facturas creadas
-        action = self.env.ref('account.action_move_out_invoice_type')
-        result = action.read()[0]
-        result['domain'] = [('id', 'in', created_invoices.ids)]
-        return result
+        # Mostrar mensaje de éxito y abrir las facturas creadas (cierra el wizard automáticamente)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Facturas generadas'),
+                'message': _('Se han generado %s facturas correctamente.') % len(created_invoices),
+                'type': 'success',
+                'sticky': False,
+                'next': {
+                    'type': 'ir.actions.act_window',
+                    'res_model': 'account.move',
+                    'domain': [('id', 'in', created_invoices.ids)],
+                    'views': [[False, 'tree'], [False, 'form']],
+                    'view_mode': 'tree,form',
+                    'name': _('Facturas de cuotas generadas'),
+                }
+            }
+        }
