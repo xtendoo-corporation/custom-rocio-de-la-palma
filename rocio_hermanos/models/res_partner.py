@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
     # Campos para gestionar hermanos
-    ref = fields.Char(string="Referencia interna", required=True, tracking=True)
+    ref = fields.Char(string="Referencia interna", tracking=True)
     is_brother = fields.Boolean(string="Hermano", default=False, tracking=True)
     brother_since = fields.Date(string="Fecha de alta", tracking=True)
     brother_end_date = fields.Date(string="Fecha de baja", tracking=True)
@@ -67,6 +68,15 @@ class ResPartner(models.Model):
         store=True,
         help="Indicador calculado: True si es hermano y no tiene fecha de baja.",
     )
+
+    @api.constrains("is_brother", "ref")
+    def _check_ref_required_for_brother(self):
+        """Validar que ref es obligatorio si is_brother es True."""
+        for rec in self:
+            if rec.is_brother and not rec.ref:
+                raise ValidationError(
+                    _("La referencia interna es obligatoria para los hermanos.")
+                )
 
     @api.depends("is_brother", "brother_end_date")
     def _compute_brother_active(self):
