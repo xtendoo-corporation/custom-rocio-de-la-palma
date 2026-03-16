@@ -1,147 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-   <template id="recibo_cuota_hermano_document">
-       <t t-call="web.html_container">
-           <meta charset="UTF-8"/>
-           <style type="text/css">
-               /* Reset global para eliminar márgenes por defecto del navegador/renderer */
-               body {
-               margin: 0;
-               padding: 0;
-               font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
-               }
-               .recibo-wrapper {
-               display: flex;
-               flex-direction: column;
-               min-height: 100vh;
-               padding: 10mm;
-               }
-               .recibo-main {
-               background: #fff;
-               border-radius: 12px;
-               box-shadow: 0 2px 8px #bbb;
-               padding: 18px 18px 18px 18px;
-               margin: 0 auto 0 auto;
-               max-width: 800px;
-               width: 98%;
-               border: 1px solid #222;
-               flex: 1;
-               display: flex;
-               flex-direction: column;
-               }
-               .recibo-header {
-               /* Cabecera en tabla para mayor compatibilidad con PDF renderers */
-               width: 100%;
-               border-collapse: collapse;
-               border-bottom: 2px solid #222;
-               padding-bottom: 6px;
-               margin-bottom: 16px;
-               }
-               .logo-cell {
-               width: 100px;
-               vertical-align: middle;
-               text-align: center;
-               padding: 0;
-               }
-               .logo-cell img {
-               display: block;
-               width: 90px;
-               height: 90px;
-               max-width: 90px;
-               max-height: 90px;
-               margin: 0 auto;
-               }
-               .title-cell {
-               vertical-align: top; /* importante: alinea el título por la parte superior */
-               text-align: right;
-               color: #000;
-               font-size: 25px;
-               font-weight: 700;
-               letter-spacing: 1px;
-               line-height: 1.05;
-               margin: 0;
-               margin-top: 4px;
-               }
-               .recibo-content {
-               margin-top: 14px;
-               font-size: 18px;
-               line-height: 1.7;
-               flex: 1;
-               }
-               .recibo-label {
-               font-weight: bold;
-               color: #000;
-               font-size: 18px;
-               }
-               .recibo-section {
-               margin-bottom: 25px;
-               padding-bottom: 8px;
-               border-bottom: 1.5px dashed #888;
-               }
-               .recibo-section:last-child {
-               border-bottom: none;
-               }
-               .recibo-footer {
-               margin-top: auto;
-               padding-top: 18px;
-               font-size: 12px;
-               color: #555;
-               text-align: right;
-               border-top: 1.5px dashed #888;
-               }
-           </style>
-           <t t-foreach="docs" t-as="invoice">
-               <div class="recibo-wrapper">
-                   <div class="recibo-main">
-                       <!-- Cabecera con tabla para garantizar alineación top en PDF -->
-                       <table class="recibo-header">
-                       <tr>
-                           <td class="logo-cell">
-                               <t t-if="invoice.company_id and invoice.company_id.logo">
-                                   <img t-att-src="image_data_uri(invoice.company_id.logo)" alt="Logo"/>
-                               </t>
-                           </td>
-                           <td class="title-cell">
-                               Real, Muy antigua, Ilustre, Fervorosa y Humilde Hermandad de Nuestra Señora del Rocío
-                           </td>
-                       </tr>
-                   </table>
-                   <div class="recibo-content">
-                       <div class="recibo-section">
-                           Hemos recibido de nuestro Hermano/a:
-                           <br/>
-                           <strong class="recibo-label" t-esc="invoice.partner_id.name"/>
-                           <br/>
-                           <strong class="recibo-label" t-esc="invoice.partner_id.contact_address"/>
-                       </div>
-                       <div class="recibo-section">
-                           La cantidad de
-                           <strong class="recibo-label" t-esc="invoice.amount_total"/>
-                           € correspondiente a la cuota del año
-                           <strong class="recibo-label"
-                                   t-esc="invoice.invoice_date and invoice.invoice_date.year or ''"/>
-                       </div>
-                       <div class="recibo-section">
-                           Antigüedad como Hermano/a:
-                           <br/>
-                           <strong class="recibo-label" t-esc="invoice.partner_id.brother_since"/>
-                       </div>
-                       <t t-if="invoice.partner_shipping_id and ( (invoice.partner_shipping_id.contact_address or '').strip() != (invoice.partner_id.contact_address or '').strip() )">
-                           <div class="recibo-section">
-                               Dirección de cobro:
-                               <br/>
-                               <strong class="recibo-label" t-esc="invoice.partner_shipping_id.contact_address"/>
-                           </div>
-                       </t>
-                   </div>
-                   <div class="recibo-footer">
-                       "Que la Virgen del Rocío os bendiga y acompañe siempre."
-                       <br/>
-                       Recibo generado automáticamente por la Hermandad
-                   </div>
-               </div>
-           </div>
-           </t>
-       </t>
-   </template>
+    <template id="recibo_cuota_hermano_document">
+        <t t-call="web.html_container">
+            <meta charset="UTF-8"/>
+            <style type="text/css">
+                /* Reset global para eliminar márgenes por defecto del navegador/renderer */
+                body {
+                margin: 0;
+                padding: 0;
+                font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
+                }
+                .recibo-wrapper {
+                position: relative;
+                /* Quitamos min-height 100vh para evitar la hoja en blanco extra */
+                padding: 5mm 5mm 5mm 25mm;
+                box-sizing: border-box;
+                page-break-inside: avoid;
+                overflow: hidden; /* Cortar cualquier desbordamiento fantasma */
+                }
+                /* Línea separadora vertical */
+                .separator-line {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 20mm;
+                border-left: 1px solid #000;
+                }
+                /* Panel girado a la izquierda */
+                .left-panel-text {
+                position: absolute;
+                top: 50%;
+                left: 6mm;
+                /* Reducido para que quepa en la altura de un A5 Landscape (148mm) */
+                width: 130mm;
+                margin-left: -65mm;
+
+                -webkit-transform: rotate(-90deg);
+                transform: rotate(-90deg);
+
+                text-align: center;
+                white-space: nowrap;
+                font-size: 14px;
+                color: #000;
+                letter-spacing: 1px;
+                margin-top: -6px; /* Ajustar para centrar verticalmente el texto */
+                margin-bottom: 10px; /* Separación entre el texto y el borde del panel */
+
+                }
+
+                /* Panel Derecha principal */
+                .right-panel {
+                width: 100%;
+                }
+                .recibo-main {
+                background: #fff;
+                padding: 18px;
+                margin: 0;
+                width: 100%;
+                border: none;
+                box-sizing: border-box;
+                }
+                .recibo-header {
+                /* Cabecera en tabla para mayor compatibilidad con PDF renderers */
+                width: 100%;
+                border-collapse: collapse;
+                border-bottom: 2px solid #222;
+                padding-bottom: 6px;
+                margin-bottom: 16px;
+                }
+                .logo-cell {
+                width: 100px;
+                vertical-align: middle;
+                text-align: center;
+                padding: 0;
+                }
+                .logo-cell img {
+                display: block;
+                width: 90px;
+                height: 90px;
+                max-width: 90px;
+                max-height: 90px;
+                margin: 0 auto;
+                }
+                .title-cell {
+                vertical-align: top; /* importante: alinea el título por la parte superior */
+                text-align: right;
+                color: #000;
+                font-size: 23px;
+                font-weight: 700;
+                letter-spacing: 1px;
+                line-height: 1.05;
+                margin: 0;
+                margin-top: 4px;
+                }
+                .recibo-content {
+                margin-top: 14px;
+                font-size: 18px;
+                line-height: 1.7;
+                }
+                .recibo-label {
+                font-weight: bold;
+                color: #000;
+                font-size: 18px;
+                }
+                .recibo-section {
+                margin-bottom: 25px;
+                padding-bottom: 8px;
+                border-bottom: 1.5px dashed #888;
+                }
+                .recibo-section:last-child {
+                border-bottom: none;
+                }
+                .recibo-footer {
+                margin-top: 20px;
+                padding-top: 18px;
+                font-size: 12px;
+                color: #555;
+                text-align: right;
+                border-top: 1.5px dashed #888;
+                }
+            </style>
+            <t t-foreach="docs" t-as="invoice">
+                <div class="recibo-wrapper">
+                    <div class="separator-line"></div>
+
+                    <!-- PARTE IZQUIERDA (Texto Rotado) -->
+                    <div class="left-panel-text">
+                        <span t-esc="invoice.partner_id.name" style="font-weight: bold;"/>
+                        <span style="display:inline-block; width: 20px;"></span>
+                        <br/>Fecha:
+                        <strong><span t-esc="invoice.invoice_date"/></strong>
+                        <span style="display:inline-block; width: 20px;"></span>
+                        <br/>
+                        Importe:
+                        <span t-esc="invoice.amount_total" style="font-weight: bold;"/>
+                        €
+                    </div>
+
+                    <!-- PARTE DERECHA (Contenido Principal) -->
+                    <div class="right-panel">
+                        <div class="recibo-main">
+                            <table class="recibo-header">
+                                <tr>
+                                    <td class="logo-cell">
+                                        <t t-if="invoice.company_id and invoice.company_id.logo">
+                                            <img t-att-src="image_data_uri(invoice.company_id.logo)"
+                                                 alt="Logo"/>
+                                        </t>
+                                    </td>
+                                    <td class="title-cell">
+                                        Real, Muy antigua, Ilustre, Fervorosa y Humilde Hermandad de
+                                        Nuestra Señora del Rocío
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="recibo-content">
+                                <div class="recibo-section">Hemos recibido de nuestro Hermano/a:
+                                    <br/>
+                                    <strong class="recibo-label" t-esc="invoice.partner_id.name"/>
+
+                                    <!-- Dirección forzando salto de línea con DIVs separados -->
+                                    <div class="recibo-label" style="margin-top: 2px;">
+                                        <span t-esc="invoice.partner_id.street"/>
+                                        <span t-if="invoice.partner_id.street2">, <t t-esc="invoice.partner_id.street2"/></span>
+                                    </div>
+                                    <div class="recibo-label">
+                                        <span t-esc="invoice.partner_id.zip"/>
+                                        <span t-esc="invoice.partner_id.city"/>
+                                        <span t-if="invoice.partner_id.state_id"> (<t t-esc="invoice.partner_id.state_id.name"/>)</span>
+                                        <span t-if="invoice.partner_id.country_id"> <t t-esc="invoice.partner_id.country_id.name"/></span>
+                                    </div>
+                                </div>
+                                <div class="recibo-section">La cantidad de
+                                    <strong
+                                        class="recibo-label" t-esc="invoice.amount_total"/>
+                                    €
+                                    correspondiente a la cuota del año
+                                    <strong class="recibo-label"
+                                            t-esc="invoice.invoice_date and invoice.invoice_date.year or ''"/>
+                                </div>
+                                <div class="recibo-section">Antigüedad como Hermano/a:
+                                    <br/>
+                                    <strong
+                                        class="recibo-label"
+                                        t-esc="invoice.partner_id.brother_since"/>
+                                </div>
+                                <t t-if="invoice.partner_shipping_id and ( (invoice.partner_shipping_id.contact_address or '').strip() != (invoice.partner_id.contact_address or '').strip() )">
+                                <div class="recibo-section">Dirección de cobro:
+                                    <div class="recibo-label">
+                                        <div>
+                                            <span t-esc="invoice.partner_shipping_id.street"/>
+                                            <span t-if="invoice.partner_shipping_id.street2">,
+                                                <t t-esc="invoice.partner_shipping_id.street2"/>
+                                            </span>
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <span t-esc="invoice.partner_shipping_id.zip"/>
+                                            <span t-esc="invoice.partner_shipping_id.city"/>
+                                            <span t-if="invoice.partner_shipping_id.state_id">
+                                                (<t t-esc="invoice.partner_shipping_id.state_id.name"/>)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                </t>
+
+                                <div class="recibo-footer">"Que la Virgen del Rocío os bendiga y
+                                    acompañe siempre."
+                                    <br/>
+                                    Recibo generado automáticamente por la
+                                    Hermandad
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
 </odoo>
