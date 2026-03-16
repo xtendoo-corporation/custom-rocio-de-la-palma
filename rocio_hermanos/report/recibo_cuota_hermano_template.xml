@@ -69,24 +69,24 @@
                 margin-bottom: 8px;
                 }
                 .logo-cell {
-                width: 100px;
-                vertical-align: middle;
+                width: 110px;
+                vertical-align: top;
                 text-align: center;
                 padding: 0;
                 }
                 .logo-cell img {
                 display: block;
-                width: 90px;
-                height: 90px;
-                max-width: 90px;
-                max-height: 90px;
+                width: 100px;
+                height: 100px;
+                max-width: 100px;
+                max-height: 100px;
                 margin: 0 auto;
                 }
                 .title-cell {
                 vertical-align: top; /* importante: alinea el título por la parte superior */
                 text-align: right;
                 color: #000;
-                font-size: 23px;
+                font-size: 22px;
                 font-weight: 700;
                 letter-spacing: 1px;
                 line-height: 1.05;
