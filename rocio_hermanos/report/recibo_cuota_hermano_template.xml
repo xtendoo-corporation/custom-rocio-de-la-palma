@@ -129,7 +129,7 @@
                         <span t-esc="invoice.partner_id.name" style="font-weight: bold;"/>
                         <span style="display:inline-block; width: 20px;"></span>
                         <br/>Fecha:
-                        <strong><span t-esc="invoice.invoice_date"/></strong>
+                        <strong><span t-esc="invoice.invoice_date.strftime('%d/%m/%Y')"/></strong>
                         <span style="display:inline-block; width: 20px;"></span>
                         <br/>
                         Importe:
@@ -149,13 +149,13 @@
                                         </t>
                                     </td>
                                     <td class="title-cell">
-                                        Real, Muy antigua, Ilustre, Fervorosa y Humilde Hermandad de
-                                        Nuestra Señora del Rocío
+                                        Real, Muy Antigua, Ilustre, Fervorosa y Humilde Hermandad de
+                                        Nuestra Señora del Rocío de la Palma del Condado
                                     </td>
                                 </tr>
                             </table>
                             <div class="recibo-content">
-                                <div class="recibo-section">Hemos recibido de nuestro Hermano/a:
+                                <div class="recibo-section">Hemos recibido de nuestro/a hermano/a:
                                     <br/>
                                     <strong class="recibo-label" t-esc="invoice.partner_id.name"/>
 
@@ -179,11 +179,11 @@
                                     <strong class="recibo-label"
                                             t-esc="invoice.invoice_date and invoice.invoice_date.year or ''"/>
                                 </div>
-                                <div class="recibo-section">Antigüedad como Hermano/a:
+                                <div class="recibo-section">Antigüedad como hermano/a:
                                     <br/>
                                     <strong
                                         class="recibo-label"
-                                        t-esc="invoice.partner_id.brother_since"/>
+                                        t-esc="invoice.partner_id.brother_since.strftime('%d/%m/%Y')"/>
                                 </div>
                                 <t t-if="invoice.partner_shipping_id and ( (invoice.partner_shipping_id.contact_address or '').strip() != (invoice.partner_id.contact_address or '').strip() )">
                                 <div class="recibo-section">Dirección de cobro:
@@ -207,7 +207,7 @@
                                 </t>
 
                                 <div class="recibo-footer">"Que la Virgen del Rocío os bendiga y
-                                    acompañe siempre."
+                                    acompañe siempre".
                                     <br/>
                                     Recibo generado automáticamente por la
                                     Hermandad
