@@ -1,8 +1,19 @@
+import base64
+
 from odoo import api, models, _
 
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
+
+    def get_portal_qr_data_uri(self):
+        """Genera un QR como data URI (base64 PNG) con la URL del portal de la factura."""
+        self.ensure_one()
+        portal_url = '%s/my/invoices/%s' % (self.company_id.get_base_url(), self.id)
+        barcode_png = self.env['ir.actions.report'].barcode(
+            'QR', portal_url, width=120, height=120,
+        )
+        return 'data:image/png;base64,%s' % base64.b64encode(barcode_png).decode()
 
     @api.model
     def action_invoices_filtered_by_config_journal(self):

@@ -13,7 +13,7 @@
                 .recibo-wrapper {
                 position: relative;
                 /* Quitamos min-height 100vh para evitar la hoja en blanco extra */
-                padding: 5mm 5mm 5mm 25mm;
+                padding: 2mm 5mm 5mm 25mm;
                 box-sizing: border-box;
                 page-break-inside: avoid;
                 overflow: hidden; /* Cortar cualquier desbordamiento fantasma */
@@ -54,7 +54,7 @@
                 }
                 .recibo-main {
                 background: #fff;
-                padding: 18px;
+                padding: 10px 18px 18px 18px;
                 margin: 0;
                 width: 100%;
                 border: none;
@@ -66,7 +66,7 @@
                 border-collapse: collapse;
                 border-bottom: 2px solid #222;
                 padding-bottom: 6px;
-                margin-bottom: 16px;
+                margin-bottom: 8px;
                 }
                 .logo-cell {
                 width: 100px;
@@ -94,7 +94,7 @@
                 margin-top: 4px;
                 }
                 .recibo-content {
-                margin-top: 14px;
+                margin-top: 10px;
                 font-size: 18px;
                 line-height: 1.7;
                 }
@@ -104,9 +104,10 @@
                 font-size: 18px;
                 }
                 .recibo-section {
-                margin-bottom: 25px;
-                padding-bottom: 8px;
+                margin-bottom: 14px;
+                padding-bottom: 6px;
                 border-bottom: 1.5px dashed #888;
+                margin-top: 0;
                 }
                 .recibo-section:last-child {
                 border-bottom: none;
@@ -129,7 +130,9 @@
                         <span t-esc="invoice.partner_id.name" style="font-weight: bold;"/>
                         <span style="display:inline-block; width: 20px;"></span>
                         <br/>Fecha:
-                        <strong><span t-esc="invoice.invoice_date.strftime('%d/%m/%Y')"/></strong>
+                        <strong>
+                            <span t-esc="invoice.invoice_date.strftime('%d/%m/%Y')"/>
+                        </strong>
                         <span style="display:inline-block; width: 20px;"></span>
                         <br/>
                         Importe:
@@ -162,13 +165,19 @@
                                     <!-- Dirección forzando salto de línea con DIVs separados -->
                                     <div class="recibo-label" style="margin-top: 2px;">
                                         <span t-esc="invoice.partner_id.street"/>
-                                        <span t-if="invoice.partner_id.street2">, <t t-esc="invoice.partner_id.street2"/></span>
+                                        <span t-if="invoice.partner_id.street2">,
+                                            <t t-esc="invoice.partner_id.street2"/>
+                                        </span>
                                     </div>
                                     <div class="recibo-label">
                                         <span t-esc="invoice.partner_id.zip"/>
                                         <span t-esc="invoice.partner_id.city"/>
-                                        <span t-if="invoice.partner_id.state_id"> (<t t-esc="invoice.partner_id.state_id.name"/>)</span>
-                                        <span t-if="invoice.partner_id.country_id"> <t t-esc="invoice.partner_id.country_id.name"/></span>
+                                        <span t-if="invoice.partner_id.state_id">(<t
+                                            t-esc="invoice.partner_id.state_id.name"/>)
+                                        </span>
+                                        <span t-if="invoice.partner_id.country_id">
+                                            <t t-esc="invoice.partner_id.country_id.name"/>
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="recibo-section">La cantidad de
@@ -186,32 +195,44 @@
                                         t-esc="invoice.partner_id.brother_since.strftime('%d/%m/%Y')"/>
                                 </div>
                                 <t t-if="invoice.partner_shipping_id and ( (invoice.partner_shipping_id.contact_address or '').strip() != (invoice.partner_id.contact_address or '').strip() )">
-                                <div class="recibo-section">Dirección de cobro:
-                                    <div class="recibo-label">
-                                        <div>
-                                            <span t-esc="invoice.partner_shipping_id.street"/>
-                                            <span t-if="invoice.partner_shipping_id.street2">,
-                                                <t t-esc="invoice.partner_shipping_id.street2"/>
-                                            </span>
-                                        </div>
-                                        <br/>
-                                        <div>
-                                            <span t-esc="invoice.partner_shipping_id.zip"/>
-                                            <span t-esc="invoice.partner_shipping_id.city"/>
-                                            <span t-if="invoice.partner_shipping_id.state_id">
-                                                (<t t-esc="invoice.partner_shipping_id.state_id.name"/>)
-                                            </span>
+                                    <div class="recibo-section">Dirección de cobro:
+                                        <div class="recibo-label">
+                                            <div>
+                                                <span t-esc="invoice.partner_shipping_id.street"/>
+                                                <span t-if="invoice.partner_shipping_id.street2">,
+                                                    <t t-esc="invoice.partner_shipping_id.street2"/>
+                                                </span>
+                                            </div>
+                                            <br/>
+                                            <div>
+                                                <span t-esc="invoice.partner_shipping_id.zip"/>
+                                                <span t-esc="invoice.partner_shipping_id.city"/>
+                                                <span t-if="invoice.partner_shipping_id.state_id">
+                                                    (<t t-esc="invoice.partner_shipping_id.state_id.name"/>)
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                                 </t>
 
-                                <div class="recibo-footer">"Que la Virgen del Rocío os bendiga y
-                                    acompañe siempre".
-                                    <br/>
-                                    Recibo generado automáticamente por la
-                                    Hermandad
+                                <div class="recibo-footer"
+                                     style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #888;">
+                                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                                        <tr>
+                                            <td style="width: 90px; vertical-align: middle; text-align: left; padding: 0;">
+                                                <img t-att-src="invoice.get_portal_qr_data_uri()"
+                                                     style="width: 70px; height: 70px; display: block;"
+                                                     alt="QR Factura"/>
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: right; font-size: 12px; color: #555; line-height: 1.3; padding: 0;">
+                                                "Que la Virgen del Rocío os bendiga y acompañe siempre".
+                                                <br/>
+                                                Recibo generado automáticamente por la Hermandad
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </div>
+
                             </div>
                         </div>
                     </div>
