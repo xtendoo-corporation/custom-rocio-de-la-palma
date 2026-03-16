@@ -69,24 +69,21 @@
                 margin-bottom: 8px;
                 }
                 .logo-cell {
-                width: 110px;
+                width: 120px;
                 vertical-align: top;
                 text-align: center;
                 padding: 0;
                 }
                 .logo-cell img {
                 display: block;
-                width: 100px;
-                height: 100px;
-                max-width: 100px;
-                max-height: 100px;
-                margin: 0 auto;
+                width: 108%;
+                margin-bottom: 5px;
                 }
                 .title-cell {
                 vertical-align: top; /* importante: alinea el título por la parte superior */
                 text-align: right;
                 color: #000;
-                font-size: 22px;
+                font-size: 25px;
                 font-weight: 700;
                 letter-spacing: 1px;
                 line-height: 1.05;
@@ -94,7 +91,7 @@
                 margin-top: 4px;
                 }
                 .recibo-content {
-                margin-top: 10px;
+                margin-top: 20px;
                 font-size: 18px;
                 line-height: 1.7;
                 }
@@ -153,7 +150,7 @@
                                     </td>
                                     <td class="title-cell">
                                         Real, Muy Antigua, Ilustre, Fervorosa y Humilde Hermandad de
-                                        Nuestra Señora del Rocío de la Palma del Condado
+                                        Nuestra Señora del Rocío de La Palma del Condado
                                     </td>
                                 </tr>
                             </table>
