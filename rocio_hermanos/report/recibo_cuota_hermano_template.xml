@@ -133,8 +133,7 @@
                         <span style="display:inline-block; width: 20px;"></span>
                         <br/>
                         Importe:
-                        <span t-esc="invoice.amount_total" style="font-weight: bold;"/>
-                        €
+                        <span t-esc="invoice.amount_total" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}' style="font-weight: bold;"/>
                     </div>
 
                     <!-- PARTE DERECHA (Contenido Principal) -->
@@ -178,9 +177,7 @@
                                     </div>
                                 </div>
                                 <div class="recibo-section">La cantidad de
-                                    <strong
-                                        class="recibo-label" t-esc="invoice.amount_total"/>
-                                    €
+                                    <strong class="recibo-label" t-esc="invoice.amount_total" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'/>
                                     correspondiente a la cuota del año
                                     <strong class="recibo-label"
                                             t-esc="invoice.invoice_date and invoice.invoice_date.year or ''"/>
