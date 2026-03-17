@@ -102,7 +102,7 @@
                 }
                 .recibo-section {
                 margin-bottom: 14px;
-                padding-bottom: 14px;
+                padding-bottom: 10px;
                 border-bottom: 1.5px;
                 margin-top: 0;
                 }
