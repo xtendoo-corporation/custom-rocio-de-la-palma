@@ -100,6 +100,7 @@ class RocioHermanoInvoiceWizard(models.TransientModel):
                     'domain': [('id', 'in', created_invoices.ids)],
                     'views': [[False, 'list'], [False, 'form']],
                     'view_mode': 'list,form',
+                    'context': {'default_move_type': 'out_invoice', 'move_type': 'out_invoice', 'journal_type': 'sale'},
                     'name': _('Facturas de cuotas generadas'),
                 }
             }
