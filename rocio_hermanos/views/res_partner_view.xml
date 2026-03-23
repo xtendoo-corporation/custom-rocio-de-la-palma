@@ -90,8 +90,8 @@
                 <field name="city"/>
                 <field name="state_id"/>
                 <field name="brother_birth_date"/>
-                <field name="brother_method_of_payment"/>
-                <field name="brother_advertising"/>
+                <field name="customer_payment_mode_id"/>
+                <field name="brother_advertising" optional="hide"/>
                 <field name="email" optional="hide"/>
                 <field name="phone" optional="hide"/>
             </list>

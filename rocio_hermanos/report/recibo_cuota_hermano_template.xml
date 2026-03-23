@@ -2,7 +2,7 @@
 <odoo>
     <template id="recibo_cuota_hermano_document">
         <t t-call="web.html_container">
-            <meta charset="UTF-8"/>
+            <meta charset="UTF-8" />
             <style type="text/css">
                 /* Reset global para eliminar márgenes por defecto del navegador/renderer */
                 body {
@@ -124,16 +124,24 @@
 
                     <!-- PARTE IZQUIERDA (Texto Rotado) -->
                     <div class="left-panel-text">
-                        <span t-esc="invoice.partner_id.name" style="font-weight: bold;"/>
-                        <span style="display:inline-block; width: 20px;"></span>
-                        <br/>Fecha:
-                        <strong>
-                            <span t-esc="invoice.invoice_date.strftime('%d/%m/%Y')"/>
+                        <span t-esc="invoice.partner_id.name" style="font-weight: bold;" />
+                        <span
+                            style="display:inline-block; width: 20px;"></span>
+                        <br />Fecha: <strong>
+                            <span t-esc="invoice.invoice_date.strftime('%d/%m/%Y')" />
                         </strong>
-                        <span style="display:inline-block; width: 20px;"></span>
-                        <br/>
-                        Importe:
-                        <span t-esc="invoice.amount_total" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}' style="font-weight: bold;"/>
+                        <span
+                            style="display:inline-block; width: 20px;"></span>
+                        <br /> Importe: <span
+                            t-esc="invoice.amount_total"
+                            t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'
+                            style="font-weight: bold;" />
+                        <t
+                            t-if="invoice.partner_id.brother_district">
+                            <span style="display:inline-block; width: 20px;"></span> Distrito: <span
+                                t-esc="invoice.partner_id.brother_district"
+                                style="font-weight: bold;" />
+                        </t>
                     </div>
 
                     <!-- PARTE DERECHA (Contenido Principal) -->
@@ -144,7 +152,7 @@
                                     <td class="logo-cell">
                                         <t t-if="invoice.company_id and invoice.company_id.logo">
                                             <img t-att-src="image_data_uri(invoice.company_id.logo)"
-                                                 alt="Logo"/>
+                                                alt="Logo" />
                                         </t>
                                     </td>
                                     <td class="title-cell">
@@ -154,55 +162,59 @@
                                 </tr>
                             </table>
                             <div class="recibo-content">
-                                <div class="recibo-section">Hemos recibido de nuestro/a hermano/a:
-                                    <br/>
-                                    <strong class="recibo-label" t-esc="invoice.partner_id.name"/>
-
-                                    <!-- Dirección forzando salto de línea con DIVs separados -->
-                                    <div class="recibo-label" style="margin-top: 2px;">
-                                        <span t-esc="invoice.partner_id.street"/>
-                                        <span t-if="invoice.partner_id.street2">,
-                                            <t t-esc="invoice.partner_id.street2"/>
+                                <div class="recibo-section">Hemos recibido de nuestro/a hermano/a: <br />
+                                    <strong
+                                        class="recibo-label" t-esc="invoice.partner_id.name" />
+                                    <div
+                                        class="recibo-label" style="margin-top: 2px;">
+                                        <span t-esc="invoice.partner_id.street" />
+                                        <span t-if="invoice.partner_id.street2">, <t
+                                                t-esc="invoice.partner_id.street2" />
                                         </span>
                                     </div>
-                                    <div class="recibo-label">
-                                        <span t-esc="invoice.partner_id.zip"/>
-                                        <span t-esc="invoice.partner_id.city"/>
+                                    <div
+                                        class="recibo-label">
+                                        <span t-esc="invoice.partner_id.zip" />
+                                        <span t-esc="invoice.partner_id.city" />
                                         <span t-if="invoice.partner_id.state_id">(<t
-                                            t-esc="invoice.partner_id.state_id.name"/>)
-                                        </span>
+                                                t-esc="invoice.partner_id.state_id.name" />) </span>
                                         <span t-if="invoice.partner_id.country_id">
-                                            <t t-esc="invoice.partner_id.country_id.name"/>
+                                            <t t-esc="invoice.partner_id.country_id.name" />
                                         </span>
                                     </div>
                                 </div>
-                                <div class="recibo-section">La cantidad de
-                                    <strong class="recibo-label" t-esc="invoice.amount_total" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'/>
-                                    correspondiente a la cuota del año
-                                    <strong class="recibo-label"
-                                            t-esc="invoice.invoice_date and invoice.invoice_date.year or ''"/>
+                                <div class="recibo-section">La cantidad de <strong
+                                        class="recibo-label" t-esc="invoice.amount_total"
+                                        t-options='{"widget": "monetary", "display_currency": invoice.currency_id}' />
+                                    correspondiente a la cuota del año <strong class="recibo-label"
+                                        t-esc="invoice.invoice_date and invoice.invoice_date.year or ''" />
                                 </div>
-                                <div class="recibo-section">Antigüedad como hermano/a:
-                                    <br/>
+                                <div class="recibo-section">Antigüedad como hermano/a: <br />
                                     <strong
                                         class="recibo-label"
-                                        t-esc="invoice.partner_id.brother_since.strftime('%d/%m/%Y')"/>
+                                        t-esc="invoice.partner_id.brother_since.strftime('%d/%m/%Y')" />
+                                        <t t-if="invoice.partner_id.brother_district">
+                                        <span style="padding-left: 12px;" > Distrito: </span>
+                                        <strong class="recibo-label" t-esc="invoice.partner_id.brother_district" />
+                                    </t>
                                 </div>
-                                <t t-if="invoice.partner_shipping_id and ( (invoice.partner_shipping_id.contact_address or '').strip() != (invoice.partner_id.contact_address or '').strip() )">
-                                    <div class="recibo-section">Dirección de cobro:
-                                        <div class="recibo-label">
+                                <t
+                                    t-if="invoice.partner_shipping_id and ( (invoice.partner_shipping_id.contact_address or '').strip() != (invoice.partner_id.contact_address or '').strip() )">
+                                    <div class="recibo-section">Dirección de cobro: <div
+                                            class="recibo-label">
                                             <div>
-                                                <span t-esc="invoice.partner_shipping_id.street"/>
-                                                <span t-if="invoice.partner_shipping_id.street2">,
-                                                    <t t-esc="invoice.partner_shipping_id.street2"/>
+                                                <span t-esc="invoice.partner_shipping_id.street" />
+                                                <span t-if="invoice.partner_shipping_id.street2">, <t
+                                                        t-esc="invoice.partner_shipping_id.street2" />
                                                 </span>
                                             </div>
-                                            <br/>
+                                            <br />
                                             <div>
-                                                <span t-esc="invoice.partner_shipping_id.zip"/>
-                                                <span t-esc="invoice.partner_shipping_id.city"/>
-                                                <span t-if="invoice.partner_shipping_id.state_id">
-                                                    (<t t-esc="invoice.partner_shipping_id.state_id.name"/>)
+                                                <span t-esc="invoice.partner_shipping_id.zip" />
+                                                <span t-esc="invoice.partner_shipping_id.city" />
+                                                <span t-if="invoice.partner_shipping_id.state_id"> (<t
+                                                        t-esc="invoice.partner_shipping_id.state_id.name" />
+                                        )
                                                 </span>
                                             </div>
                                         </div>
@@ -210,19 +222,21 @@
                                 </t>
 
                                 <div class="recibo-footer"
-                                     style="margin-top: 8px; padding-top: 8px;">
-                                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                                    style="margin-top: 8px; padding-top: 8px;">
+                                    <table
+                                        style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                                         <tr>
-                                            <td style="width: 90px; vertical-align: middle; text-align: left; padding: 0;">
+                                            <td
+                                                style="width: 90px; vertical-align: middle; text-align: left; padding: 0;">
                                                 <img t-att-src="invoice.get_portal_qr_data_uri()"
-                                                     style="width: 70px; height: 70px; display: block;"
-                                                     alt="QR Factura"/>
+                                                    style="width: 70px; height: 70px; display: block;"
+                                                    alt="QR Factura" />
                                             </td>
-                                            <td style="vertical-align: middle; text-align: right; font-size: 12px; color: #555; line-height: 1.3; padding: 0;">
-                                                "Que la Virgen del Rocío os bendiga y acompañe siempre".
-                                                <br/>
-                                                Recibo generado automáticamente por la Hermandad
-                                            </td>
+                                            <td
+                                                style="vertical-align: middle; text-align: right; font-size: 12px; color: #555; line-height: 1.3; padding: 0;">
+                                                "Que la Virgen del Rocío os bendiga y acompañe
+                                                siempre". <br /> Recibo generado automáticamente por
+                                                la Hermandad </td>
                                         </tr>
                                     </table>
                                 </div>

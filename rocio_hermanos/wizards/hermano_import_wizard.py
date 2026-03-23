@@ -49,11 +49,11 @@ class RocioHermanoImportWizard(models.TransientModel):
 
             # Intentar parsear con diferentes formatos
             formats_to_try = [
-                "%m/%d/%y",    # MM/DD/YY (formato Excel de 2 dígitos) - ej: 02/11/83
-                "%m/%d/%Y",    # MM/DD/YYYY (formato Excel de 4 dígitos)
-                "%d/%m/%Y",    # DD/MM/YYYY (formato español tradicional)
-                "%Y-%m-%d",    # YYYY-MM-DD (formato ISO)
-                "%d-%m-%Y",    # DD-MM-YYYY (formato español con guiones)
+                "%m/%d/%y",  # MM/DD/YY (formato Excel de 2 dígitos) - ej: 02/11/83
+                "%m/%d/%Y",  # MM/DD/YYYY (formato Excel de 4 dígitos)
+                "%d/%m/%Y",  # DD/MM/YYYY (formato español tradicional)
+                "%Y-%m-%d",  # YYYY-MM-DD (formato ISO)
+                "%d-%m-%Y",  # DD-MM-YYYY (formato español con guiones)
             ]
 
             for fmt in formats_to_try:
@@ -151,27 +151,27 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         try:
             # Método 1: Intentar usar directamente l10n_es_toponyms
-            if 'res.better.zip' in self.env:
-                better_zip = self.env['res.better.zip'].search([
-                    ('name', '=', zip_str),
-                    ('country_id', '=', country_id)
-                ], limit=1)
+            if "res.better.zip" in self.env:
+                better_zip = self.env["res.better.zip"].search(
+                    [("name", "=", zip_str), ("country_id", "=", country_id)], limit=1
+                )
 
                 if better_zip:
                     result = {
-                        'city': better_zip.city,
-                        'state_id': better_zip.state_id.id if better_zip.state_id else False,
+                        "city": better_zip.city,
+                        "state_id": (
+                            better_zip.state_id.id if better_zip.state_id else False
+                        ),
                     }
                     return result
 
             # Método 2: Crear partner temporal y usar onchange
-            temp_partner = self.env["res.partner"].new({
-                'zip': zip_str,
-                'country_id': country_id
-            })
+            temp_partner = self.env["res.partner"].new(
+                {"zip": zip_str, "country_id": country_id}
+            )
 
             # Intentar diferentes métodos de onchange según la versión del módulo
-            methods_to_try = ['_onchange_zip', 'onchange_zip', '_onchange_zip_id']
+            methods_to_try = ["_onchange_zip", "onchange_zip", "_onchange_zip_id"]
 
             for method_name in methods_to_try:
                 if hasattr(temp_partner, method_name):
@@ -181,8 +181,12 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                         if temp_partner.city:
                             result = {
-                                'city': temp_partner.city,
-                                'state_id': temp_partner.state_id.id if temp_partner.state_id else False,
+                                "city": temp_partner.city,
+                                "state_id": (
+                                    temp_partner.state_id.id
+                                    if temp_partner.state_id
+                                    else False
+                                ),
                             }
                             return result
                     except Exception:
@@ -191,31 +195,70 @@ class RocioHermanoImportWizard(models.TransientModel):
             # Método 3: Buscar directamente en res.country.state por código postal
             # Los códigos postales españoles tienen patrones por provincia
             province_codes = {
-                '01': 'Álava', '02': 'Albacete', '03': 'Alicante', '04': 'Almería',
-                '05': 'Ávila', '06': 'Badajoz', '07': 'Baleares', '08': 'Barcelona',
-                '09': 'Burgos', '10': 'Cáceres', '11': 'Cádiz', '12': 'Castellón',
-                '13': 'Ciudad Real', '14': 'Córdoba', '15': 'A Coruña', '16': 'Cuenca',
-                '17': 'Girona', '18': 'Granada', '19': 'Guadalajara', '20': 'Gipuzkoa',
-                '21': 'Huelva', '22': 'Huesca', '23': 'Jaén', '24': 'León',
-                '25': 'Lleida', '26': 'La Rioja', '27': 'Lugo', '28': 'Madrid',
-                '29': 'Málaga', '30': 'Murcia', '31': 'Navarra', '32': 'Ourense',
-                '33': 'Asturias', '34': 'Palencia', '35': 'Las Palmas', '36': 'Pontevedra',
-                '37': 'Salamanca', '38': 'Santa Cruz de Tenerife', '39': 'Cantabria',
-                '40': 'Segovia', '41': 'Sevilla', '42': 'Soria', '43': 'Tarragona',
-                '44': 'Teruel', '45': 'Toledo', '46': 'Valencia', '47': 'Valladolid',
-                '48': 'Bizkaia', '49': 'Zamora', '50': 'Zaragoza', '51': 'Ceuta', '52': 'Melilla'
+                "01": "Álava",
+                "02": "Albacete",
+                "03": "Alicante",
+                "04": "Almería",
+                "05": "Ávila",
+                "06": "Badajoz",
+                "07": "Baleares",
+                "08": "Barcelona",
+                "09": "Burgos",
+                "10": "Cáceres",
+                "11": "Cádiz",
+                "12": "Castellón",
+                "13": "Ciudad Real",
+                "14": "Córdoba",
+                "15": "A Coruña",
+                "16": "Cuenca",
+                "17": "Girona",
+                "18": "Granada",
+                "19": "Guadalajara",
+                "20": "Gipuzkoa",
+                "21": "Huelva",
+                "22": "Huesca",
+                "23": "Jaén",
+                "24": "León",
+                "25": "Lleida",
+                "26": "La Rioja",
+                "27": "Lugo",
+                "28": "Madrid",
+                "29": "Málaga",
+                "30": "Murcia",
+                "31": "Navarra",
+                "32": "Ourense",
+                "33": "Asturias",
+                "34": "Palencia",
+                "35": "Las Palmas",
+                "36": "Pontevedra",
+                "37": "Salamanca",
+                "38": "Santa Cruz de Tenerife",
+                "39": "Cantabria",
+                "40": "Segovia",
+                "41": "Sevilla",
+                "42": "Soria",
+                "43": "Tarragona",
+                "44": "Teruel",
+                "45": "Toledo",
+                "46": "Valencia",
+                "47": "Valladolid",
+                "48": "Bizkaia",
+                "49": "Zamora",
+                "50": "Zaragoza",
+                "51": "Ceuta",
+                "52": "Melilla",
             }
 
             province_code = zip_str[:2]
             if province_code in province_codes:
                 province_name = province_codes[province_code]
-                state = self.env['res.country.state'].search([
-                    ('name', 'ilike', province_name),
-                    ('country_id', '=', country_id)
-                ], limit=1)
+                state = self.env["res.country.state"].search(
+                    [("name", "ilike", province_name), ("country_id", "=", country_id)],
+                    limit=1,
+                )
 
                 if state:
-                    result = {'state_id': state.id}
+                    result = {"state_id": state.id}
                     return result
 
         except Exception:
@@ -223,10 +266,10 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         return {}
 
-
     def _create_or_update_bank_account(self, partner_id, acc_number):
         """Crea o actualiza la cuenta bancaria del contacto y asigna modo de pago SEPA"""
         import logging
+
         _logger = logging.getLogger(__name__)
 
         if not acc_number:
@@ -239,8 +282,8 @@ class RocioHermanoImportWizard(models.TransientModel):
         company = self.env.company
         partner = self.env["res.partner"].browse(partner_id)
 
-        #_logger.info(f"=== PROCESANDO CUENTA BANCARIA PARA: {partner.name} ===")
-        #_logger.info(f"    Cuenta: {acc_number_str}")
+        # _logger.info(f"=== PROCESANDO CUENTA BANCARIA PARA: {partner.name} ===")
+        # _logger.info(f"    Cuenta: {acc_number_str}")
 
         try:
             # 1. Crear o actualizar cuenta bancaria
@@ -251,150 +294,180 @@ class RocioHermanoImportWizard(models.TransientModel):
 
             if existing_bank:
                 bank_id = existing_bank.id
-                #_logger.info(f"    ✓ Cuenta bancaria ya existe (ID: {bank_id})")
+                # _logger.info(f"    ✓ Cuenta bancaria ya existe (ID: {bank_id})")
             else:
                 try:
-                    bank_record = self.env["res.partner.bank"].create({
-                        "acc_number": acc_number_str,
-                        "partner_id": partner_id,
-                        "company_id": company.id,
-                    })
+                    bank_record = self.env["res.partner.bank"].create(
+                        {
+                            "acc_number": acc_number_str,
+                            "partner_id": partner_id,
+                            "company_id": company.id,
+                        }
+                    )
                     bank_id = bank_record.id
-                    #_logger.info(f"    ✓ Cuenta bancaria CREADA (ID: {bank_id})")
+                    # _logger.info(f"    ✓ Cuenta bancaria CREADA (ID: {bank_id})")
                 except Exception as e:
-                    #_logger.error(f"    ✗ ERROR al crear cuenta bancaria: {str(e)}")
+                    # _logger.error(f"    ✗ ERROR al crear cuenta bancaria: {str(e)}")
                     return False, f"Error al crear cuenta bancaria: {str(e)}"
 
             # 2. Buscar modo de pago SEPA existente
-            #_logger.info(f"    Buscando modo de pago SEPA...")
-            sepa_mode = self.env['account.payment.mode'].search([
-                ('payment_method_id.code', '=', 'sepa_direct_debit'),
-                ('payment_type', '=', 'inbound'),
-            ], limit=1)
+            # _logger.info(f"    Buscando modo de pago SEPA...")
+            sepa_mode = self.env["account.payment.mode"].search(
+                [
+                    ("payment_method_id.code", "=", "sepa_direct_debit"),
+                    ("payment_type", "=", "inbound"),
+                ],
+                limit=1,
+            )
 
             # 3. Si NO existe, crear UNA SOLA VEZ
             if not sepa_mode:
-                #_logger.info(f"    → Modo de pago SEPA no existe, intentando crear...")
+                # _logger.info(f"    → Modo de pago SEPA no existe, intentando crear...")
                 try:
-                    sepa_method = self.env['account.payment.method'].search([
-                        ('code', '=', 'sepa_direct_debit'),
-                        ('payment_type', '=', 'inbound'),
-                    ], limit=1)
+                    sepa_method = self.env["account.payment.method"].search(
+                        [
+                            ("code", "=", "sepa_direct_debit"),
+                            ("payment_type", "=", "inbound"),
+                        ],
+                        limit=1,
+                    )
 
                     if sepa_method:
-                        journal = self.env["account.journal"].search([
-                            ("type", "=", "bank"),
-                            ("company_id", "=", company.id),
-                        ], limit=1)
+                        journal = self.env["account.journal"].search(
+                            [
+                                ("type", "=", "bank"),
+                                ("company_id", "=", company.id),
+                            ],
+                            limit=1,
+                        )
 
                         if journal:
-                            sepa_mode = self.env["account.payment.mode"].create({
-                                "name": "Débito directo SEPA para clientes",
-                                "company_id": company.id,
-                                "bank_account_link": "variable",
-                                "fixed_journal_id": journal.id,
-                                "payment_method_id": sepa_method.id,
-                                "payment_type": "inbound",
-                            })
-                            _logger.info(f"    ✓ Modo de pago SEPA CREADO (ID: {sepa_mode.id})")
+                            sepa_mode = self.env["account.payment.mode"].create(
+                                {
+                                    "name": "Débito directo SEPA para clientes",
+                                    "company_id": company.id,
+                                    "bank_account_link": "variable",
+                                    "fixed_journal_id": journal.id,
+                                    "payment_method_id": sepa_method.id,
+                                    "payment_type": "inbound",
+                                }
+                            )
+
                         else:
                             _logger.error(f"    ✗ No se encontró diario bancario")
                     else:
-                        _logger.error(f"    ✗ No se encontró método de pago sepa_direct_debit")
+                        _logger.error(
+                            f"    ✗ No se encontró método de pago sepa_direct_debit"
+                        )
                 except Exception as e:
-                    #_logger.error(f"    ✗ Error al crear modo de pago SEPA: {str(e)}")
+                    # _logger.error(f"    ✗ Error al crear modo de pago SEPA: {str(e)}")
                     return bank_id, f"Nota: {str(e)}"
-            #else:
-                #_logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
+            # else:
+            # _logger.info(f"    ✓ Modo de pago SEPA encontrado (ID: {sepa_mode.id}, Nombre: {sepa_mode.name})")
 
             # 4. Asignar modo de pago SEPA al hermano si lo encontramos
             if sepa_mode:
                 try:
                     partner.write({"customer_payment_mode_id": sepa_mode.id})
-                    #_logger.info(f"    ✓ Modo de pago SEPA ASIGNADO al hermano")
+                    # _logger.info(f"    ✓ Modo de pago SEPA ASIGNADO al hermano")
                 except Exception as e:
-                    #_logger.error(f"    ✗ Error al asignar modo de pago: {str(e)}")
+                    # _logger.error(f"    ✗ Error al asignar modo de pago: {str(e)}")
                     return bank_id, f"Nota: Error al asignar modo de pago: {str(e)}"
             else:
-                #_logger.error(f"    ✗ No se pudo obtener modo de pago SEPA")
+                # _logger.error(f"    ✗ No se pudo obtener modo de pago SEPA")
                 return bank_id, "Nota: No se pudo obtener modo de pago SEPA"
 
             # 5. AHORA crear el mandato SEPA para esta cuenta bancaria
-            #_logger.info(f"    Procesando mandato SEPA...")
+            # _logger.info(f"    Procesando mandato SEPA...")
             try:
                 # Verificar si ya existe un mandato para esta cuenta
-                existing_mandate = self.env["account.banking.mandate"].search([
-                    ("partner_bank_id", "=", bank_id),
-                    ("company_id", "=", company.id),
-                ], limit=1)
+                existing_mandate = self.env["account.banking.mandate"].search(
+                    [
+                        ("partner_bank_id", "=", bank_id),
+                        ("company_id", "=", company.id),
+                    ],
+                    limit=1,
+                )
 
                 if existing_mandate:
-                    #_logger.info(f"    → Mandato existente encontrado (Estado: {existing_mandate.state})")
+                    # _logger.info(f"    → Mandato existente encontrado (Estado: {existing_mandate.state})")
                     # Si existe, validarlo si está en borrador
                     if existing_mandate.state == "draft":
                         try:
-                            existing_mandate.write({
-                                "format": "sepa",
-                                "type": "recurrent",
-                                "recurrent_sequence_type": "first",
-                                "scheme": "CORE",
-                                "signature_date": existing_mandate.signature_date or fields.Date.today(),
-                            })
+                            existing_mandate.write(
+                                {
+                                    "format": "sepa",
+                                    "type": "recurrent",
+                                    "recurrent_sequence_type": "first",
+                                    "scheme": "CORE",
+                                    "signature_date": existing_mandate.signature_date
+                                    or fields.Date.today(),
+                                }
+                            )
                             existing_mandate.validate()
-                            #_logger.info(f"    ✓ Mandato existente VALIDADO (Ref: {existing_mandate.unique_mandate_reference})")
+                            # _logger.info(f"    ✓ Mandato existente VALIDADO (Ref: {existing_mandate.unique_mandate_reference})")
                             return bank_id, "Mandato existente validado"
                         except Exception as e:
-                            #_logger.error(f"    ✗ Error al validar mandato existente: {str(e)}")
-                            return bank_id, f"Nota: Error al validar mandato existente: {str(e)}"
+                            # _logger.error(f"    ✗ Error al validar mandato existente: {str(e)}")
+                            return (
+                                bank_id,
+                                f"Nota: Error al validar mandato existente: {str(e)}",
+                            )
                     elif existing_mandate.state == "valid":
-                        #_logger.info(f"    ✓ Mandato YA VÁLIDO (Ref: {existing_mandate.unique_mandate_reference})")
+                        # _logger.info(f"    ✓ Mandato YA VÁLIDO (Ref: {existing_mandate.unique_mandate_reference})")
                         return bank_id, None  # Ya tiene mandato válido
                     else:
                         # Estado cancel o expired, intentar reactivar
-                        #_logger.info(f"    → Intentando reactivar mandato en estado {existing_mandate.state}...")
+                        # _logger.info(f"    → Intentando reactivar mandato en estado {existing_mandate.state}...")
                         try:
                             if existing_mandate.state == "cancel":
                                 existing_mandate.back2draft()
                                 existing_mandate.validate()
                             elif existing_mandate.state == "expired":
                                 existing_mandate.write({"state": "valid"})
-                            #_logger.info(f"    ✓ Mandato REACTIVADO (Ref: {existing_mandate.unique_mandate_reference})")
+                            # _logger.info(f"    ✓ Mandato REACTIVADO (Ref: {existing_mandate.unique_mandate_reference})")
                             return bank_id, "Mandato reactivado"
                         except Exception as e:
-                            #_logger.error(f"    ✗ Error al reactivar mandato: {str(e)}")
-                            return bank_id, f"Nota: Error al reactivar mandato: {str(e)}"
+                            # _logger.error(f"    ✗ Error al reactivar mandato: {str(e)}")
+                            return (
+                                bank_id,
+                                f"Nota: Error al reactivar mandato: {str(e)}",
+                            )
                 else:
                     # No existe mandato, crear uno nuevo
-                    #_logger.info(f"    → No existe mandato, creando uno nuevo...")
+                    # _logger.info(f"    → No existe mandato, creando uno nuevo...")
                     try:
                         # Paso 1: Crear mandato en estado draft
-                        mandate = self.env["account.banking.mandate"].create({
-                            "format": "sepa",
-                            "type": "recurrent",
-                            "recurrent_sequence_type": "first",
-                            "signature_date": fields.Date.today(),
-                            "partner_bank_id": bank_id,
-                            "company_id": company.id,
-                            "scheme": "CORE",
-                        })
-                        #_logger.info(f"    ✓ Mandato creado en DRAFT (ID: {mandate.id}, Ref: {mandate.unique_mandate_reference})")
+                        mandate = self.env["account.banking.mandate"].create(
+                            {
+                                "format": "sepa",
+                                "type": "recurrent",
+                                "recurrent_sequence_type": "first",
+                                "signature_date": fields.Date.today(),
+                                "partner_bank_id": bank_id,
+                                "company_id": company.id,
+                                "scheme": "CORE",
+                            }
+                        )
+                        # _logger.info(f"    ✓ Mandato creado en DRAFT (ID: {mandate.id}, Ref: {mandate.unique_mandate_reference})")
 
                         # Paso 2: Validar el mandato
                         mandate.validate()
-                        #_logger.info(f"    ✓ Mandato VALIDADO correctamente (Estado: {mandate.state})")
+                        # _logger.info(f"    ✓ Mandato VALIDADO correctamente (Estado: {mandate.state})")
 
                         return bank_id, None  # Éxito total
                     except Exception as e:
-                        #_logger.error(f"    ✗ ERROR al crear mandato: {str(e)}")
+                        # _logger.error(f"    ✗ ERROR al crear mandato: {str(e)}")
                         import traceback
-                        #_logger.error(traceback.format_exc())
+
+                        # _logger.error(traceback.format_exc())
                         return bank_id, f"Nota: Error al crear mandato: {str(e)}"
             except Exception as e:
-                #_logger.error(f"    ✗ ERROR al procesar mandato: {str(e)}")
+                # _logger.error(f"    ✗ ERROR al procesar mandato: {str(e)}")
                 return bank_id, f"Nota: Error al procesar mandato: {str(e)}"
 
         except Exception as e:
-            #_logger.error(f"    ✗ ERROR GENERAL: {str(e)}")
+            # _logger.error(f"    ✗ ERROR GENERAL: {str(e)}")
             return False, f"Error general: {str(e)}"
 
     def _get_or_create_manual_payment_mode(self):
@@ -403,48 +476,63 @@ class RocioHermanoImportWizard(models.TransientModel):
 
         try:
             # Buscar modo de pago manual existente
-            manual_mode = self.env["account.payment.mode"].search([
-                ("name", "ilike", "Recibo"),
-                ("company_id", "=", company.id),
-                ("payment_type", "=", "inbound"),
-            ], limit=1)
+            manual_mode = self.env["account.payment.mode"].search(
+                [
+                    ("name", "ilike", "Recibo"),
+                    ("company_id", "=", company.id),
+                    ("payment_type", "=", "inbound"),
+                ],
+                limit=1,
+            )
 
             if not manual_mode:
                 # Buscar también por "Manual" o "Efectivo"
-                manual_mode = self.env["account.payment.mode"].search([
-                    "|", "|",
-                    ("name", "ilike", "Manual"),
-                    ("name", "ilike", "Efectivo"),
-                    ("name", "ilike", "Cash"),
-                    ("company_id", "=", company.id),
-                    ("payment_type", "=", "inbound"),
-                ], limit=1)
+                manual_mode = self.env["account.payment.mode"].search(
+                    [
+                        "|",
+                        "|",
+                        ("name", "ilike", "Manual"),
+                        ("name", "ilike", "Efectivo"),
+                        ("name", "ilike", "Cash"),
+                        ("company_id", "=", company.id),
+                        ("payment_type", "=", "inbound"),
+                    ],
+                    limit=1,
+                )
 
             if not manual_mode:
                 # Si no existe, intentar crear uno
                 try:
                     # Buscar método de pago manual
-                    manual_method = self.env["account.payment.method"].search([
-                        ("code", "=", "manual"),
-                        ("payment_type", "=", "inbound"),
-                    ], limit=1)
+                    manual_method = self.env["account.payment.method"].search(
+                        [
+                            ("code", "=", "manual"),
+                            ("payment_type", "=", "inbound"),
+                        ],
+                        limit=1,
+                    )
 
                     if manual_method:
                         # Buscar un diario de banco o efectivo
-                        journal = self.env["account.journal"].search([
-                            ("type", "in", ["bank", "cash"]),
-                            ("company_id", "=", company.id),
-                        ], limit=1)
+                        journal = self.env["account.journal"].search(
+                            [
+                                ("type", "in", ["bank", "cash"]),
+                                ("company_id", "=", company.id),
+                            ],
+                            limit=1,
+                        )
 
                         if journal:
-                            manual_mode = self.env["account.payment.mode"].create({
-                                "name": "Recibo",
-                                "company_id": company.id,
-                                "bank_account_link": "fixed",
-                                "fixed_journal_id": journal.id,
-                                "payment_method_id": manual_method.id,
-                                "payment_type": "inbound",
-                            })
+                            manual_mode = self.env["account.payment.mode"].create(
+                                {
+                                    "name": "Recibo",
+                                    "company_id": company.id,
+                                    "bank_account_link": "fixed",
+                                    "fixed_journal_id": journal.id,
+                                    "payment_method_id": manual_method.id,
+                                    "payment_type": "inbound",
+                                }
+                            )
                 except Exception as e:
                     return None, f"Error al crear modo de pago manual: {str(e)}"
 
@@ -460,7 +548,10 @@ class RocioHermanoImportWizard(models.TransientModel):
         value_str = str(value).strip().lower()
 
         # Si contiene "españa" o "spanish" o "español", usar español
-        if any(word in value_str for word in ["españa", "spanish", "español", "espana", "es"]):
+        if any(
+            word in value_str
+            for word in ["españa", "spanish", "español", "espana", "es"]
+        ):
             return "es_ES"  # Español de España
 
         # En cualquier otro caso, inglés
@@ -484,18 +575,28 @@ class RocioHermanoImportWizard(models.TransientModel):
             # Verificar tamaño del archivo
             file_size_mb = len(file_content) / (1024 * 1024)
             if file_size_mb > 50:
-                raise UserError(_("El archivo es demasiado grande (%.2f MB). El límite es 50 MB.") % file_size_mb)
+                raise UserError(
+                    _("El archivo es demasiado grande (%.2f MB). El límite es 50 MB.")
+                    % file_size_mb
+                )
 
             # Intentar cargar el archivo Excel
             # Nota: read_only=True puede causar problemas con algunos archivos
             try:
-                wb = openpyxl.load_workbook(BytesIO(file_content), read_only=True, data_only=True)
+                wb = openpyxl.load_workbook(
+                    BytesIO(file_content), read_only=True, data_only=True
+                )
             except Exception as e1:
                 # Si falla con read_only, intentar sin él
                 try:
                     wb = openpyxl.load_workbook(BytesIO(file_content), data_only=True)
                 except Exception as e2:
-                    raise UserError(_("Error al leer el archivo Excel. Asegúrate de que sea un archivo .xlsx válido.\nError 1: %s\nError 2: %s") % (str(e1), str(e2)))
+                    raise UserError(
+                        _(
+                            "Error al leer el archivo Excel. Asegúrate de que sea un archivo .xlsx válido.\nError 1: %s\nError 2: %s"
+                        )
+                        % (str(e1), str(e2))
+                    )
 
             sheet = wb.active
 
@@ -506,14 +607,29 @@ class RocioHermanoImportWizard(models.TransientModel):
             raise
         except Exception as e:
             import traceback
+
             error_detail = traceback.format_exc()
-            raise UserError(_("Error al leer el archivo Excel: %s\n\nDetalles técnicos:\n%s") % (str(e) or "Error desconocido", error_detail))
+            raise UserError(
+                _("Error al leer el archivo Excel: %s\n\nDetalles técnicos:\n%s")
+                % (str(e) or "Error desconocido", error_detail)
+            )
 
         # Obtener encabezados
-        headers = {cell.value: i for i, cell in enumerate(sheet[1]) if cell.value}
+        log_lines = []
+        # Obtener encabezados y normalizarlos (quitar espacios a los lados y pasar a mayúsculas)
+        headers = {
+            str(cell.value).strip().upper(): i
+            for i, cell in enumerate(sheet[1])
+            if cell.value
+        }
+        # Log de cabeceras para depuración
+
+        log_lines.append(
+            _("Cabeceras detectadas en Excel: %s") % ", ".join(headers.keys())
+        )
 
         # Validar que el archivo tenga las columnas necesarias
-        required_columns = ["name"]
+        required_columns = ["NAME", "REGISTRO"]
         missing_columns = [col for col in required_columns if col not in headers]
         if missing_columns:
             raise UserError(
@@ -524,7 +640,6 @@ class RocioHermanoImportWizard(models.TransientModel):
         created_count = 0
         updated_count = 0
         error_count = 0
-        log_lines = []
 
         for row_idx, row in enumerate(
             sheet.iter_rows(min_row=2, values_only=True), start=2
@@ -534,12 +649,12 @@ class RocioHermanoImportWizard(models.TransientModel):
                 row_data = {h: row[i] for h, i in headers.items() if i < len(row)}
 
                 # Ignorar filas completamente vacías
-                if all(v is None or str(v).strip() == '' for v in row):
+                if all(v is None or str(v).strip() == "" for v in row):
                     continue
 
-                # Ignorar filas sin datos importantes (REGISTRO y name vacíos)
+                # Ignorar filas sin datos importantes (REGISTRO y NAME vacíos)
                 ref_value = self._to_str(row_data.get("REGISTRO"))
-                contact_name = row_data.get("name")
+                contact_name = row_data.get("NAME") or row_data.get("NOMBRE")
 
                 # Si ambos están vacíos, es una fila vacía - ignorar sin contar como error
                 if not ref_value and not contact_name:
@@ -548,7 +663,12 @@ class RocioHermanoImportWizard(models.TransientModel):
                 # Validar que REGISTRO (ref) está presente - es obligatorio
                 if not ref_value:
                     error_count += 1
-                    log_lines.append(_("Fila %s: Campo REGISTRO (referencia) obligatorio y vacío. Nombre: %s") % (row_idx, contact_name or 'Sin nombre'))
+                    log_lines.append(
+                        _(
+                            "Fila %s: Campo REGISTRO (referencia) obligatorio y vacío. Nombre: %s"
+                        )
+                        % (row_idx, contact_name or "Sin nombre")
+                    )
                     continue
 
                 if not contact_name:
@@ -556,25 +676,36 @@ class RocioHermanoImportWizard(models.TransientModel):
                     log_lines.append(_("Fila %s: No se especificó un nombre") % row_idx)
                     continue
 
-                # Obtener país primero
-                country_id = self._get_country_id(row_data.get("País"))
+                # Obtener país primero (buscar en columna PAIS o PAÍS)
+                country_id = self._get_country_id(
+                    row_data.get("PAIS") or row_data.get("PAÍS")
+                )
 
                 # Buscar código postal en diferentes formatos posibles
-                zip_code = row_data.get("zip_code") or row_data.get("C.P.") or row_data.get("C POSTAL") or row_data.get("C.POSTAL")
+                zip_code = (
+                    row_data.get("ZIP_CODE")
+                    or row_data.get("C.P.")
+                    or row_data.get("C POSTAL")
+                    or row_data.get("C.POSTAL")
+                    or row_data.get("CP")
+                )
                 zip_code = self._to_str(zip_code)
 
                 # LOG: Antes de alimentar desde Excel
-                city_pre_excel = ''  # Inicializamos la variable para evitar warning
-                _logger.info(f"===Antes de excel===\n{contact_name} -> {city_pre_excel}")
+                city_pre_excel = ""  # Inicializamos la variable para evitar warning
 
                 # Obtener ciudad del Excel
-                city_excel = self._to_str(row_data.get("POBLACION"))
-                _logger.info(f"===Lo que obtengo del excel===\n{contact_name} -> {city_excel}")
+                city_excel = self._to_str(
+                    row_data.get("POBLACION")
+                    or row_data.get("POBLACIÓN")
+                    or row_data.get("CIUDAD")
+                )
                 city = city_excel
 
                 # Obtener provincia/estado del Excel (buscar por nombre)
-                state_name = self._to_str(row_data.get("state_id") or row_data.get("State_id") or row_data.get("PROVINCIA"))
-
+                state_name = self._to_str(
+                    row_data.get("STATE_ID") or row_data.get("PROVINCIA")
+                )
                 state_id = False
                 if state_name:
                     # Primero buscar con país si lo tenemos
@@ -583,9 +714,9 @@ class RocioHermanoImportWizard(models.TransientModel):
 
                     # Si no encontramos el estado, buscar sin país
                     if not state_id:
-                        state = self.env["res.country.state"].search([
-                            ("name", "ilike", state_name.strip())
-                        ], limit=1)
+                        state = self.env["res.country.state"].search(
+                            [("name", "ilike", state_name.strip())], limit=1
+                        )
                         if state:
                             state_id = state.id
                             # Si encontramos estado, usar su país
@@ -597,43 +728,74 @@ class RocioHermanoImportWizard(models.TransientModel):
                     # Si no tenemos país, intentar determinarlo por el código postal
                     if not country_id and len(zip_code) == 5 and zip_code.isdigit():
                         # Asumir España para códigos postales de 5 dígitos
-                        spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
+                        spain = self.env["res.country"].search(
+                            [("code", "=", "ES")], limit=1
+                        )
                         if spain:
                             country_id = spain.id
 
                     if country_id:
                         spain = self.env["res.country"].browse(country_id)
                         if spain and spain.code == "ES":
-                            autocomplete_data = self._autocomplete_spanish_address(zip_code, country_id)
+                            autocomplete_data = self._autocomplete_spanish_address(
+                                zip_code, country_id
+                            )
                             if autocomplete_data:
                                 # Solo usar ciudad si no la tenemos
-                                if not city or str(city).strip() == '':
-                                    city = autocomplete_data.get('city', city)
+                                if not city or str(city).strip() == "":
+                                    city = autocomplete_data.get("city", city)
                                 # Solo usar estado si no lo tenemos
                                 if not state_id:
-                                    state_id = autocomplete_data.get('state_id', state_id)
+                                    state_id = autocomplete_data.get(
+                                        "state_id", state_id
+                                    )
                         else:
                             pass
 
                 # LOG: Una vez finalizado (antes de crear/actualizar partner)
-                _logger.info(f"====Una vez Finalizado===\n{contact_name} -> {city}")
 
                 # Debug de fechas
-                birth_date_raw = row_data.get("brother_birth_date") or row_data.get("NACIMIENTO")
+                birth_date_raw = row_data.get("BROTHER_BIRTH_DATE") or row_data.get(
+                    "NACIMIENTO"
+                )
                 birth_date_parsed = self._to_date(birth_date_raw)
 
                 since_date_raw = row_data.get("F ALTA")
                 since_date_parsed = self._to_date(since_date_raw)
 
+                # Normalizar referencia (rellenar con ceros a la izquierda hasta 4 dígitos)
+                ref_norm = (
+                    str(int(ref_value)).zfill(4)
+                    if ref_value and str(ref_value).isdigit()
+                    else ref_value
+                )
+
+                # Captura de DNI y otros campos
+                vat_value = self._to_str(
+                    row_data.get("DNI")
+                    or row_data.get("NIF")
+                    or row_data.get("CIF")
+                    or row_data.get("VAT")
+                )
+
                 vals = {
-                    "ref": ref_value,
+                    "ref": ref_norm,
                     "name": contact_name,
-                    "street": self._to_str(row_data.get("Street") or row_data.get("DIRECCION")),
+                    "vat": vat_value,
+                    "street": self._to_str(
+                        row_data.get("STREET")
+                        or row_data.get("DIRECCION")
+                        or row_data.get("DIRECCIÓN")
+                    ),
                     "zip": zip_code,
                     "city": city,
-                    "phone": self._to_str(row_data.get("TELEFONO")),
+                    "phone": self._to_str(
+                        row_data.get("TELEFONO")
+                        or row_data.get("TELÉFONO")
+                        or row_data.get("PHONE")
+                    ),
                     "email": self._to_str(row_data.get("EMAIL")),
-                    "lang": self._map_language(row_data.get("lang")),
+                    "lang": self._map_language(row_data.get("LANG")),
                     "is_brother": True,
                     "brother_district": self._to_str(row_data.get("DIST")),
                     "brother_birth_date": birth_date_parsed,
@@ -648,62 +810,77 @@ class RocioHermanoImportWizard(models.TransientModel):
                 }
 
                 existing_partner = self.env["res.partner"].search(
-                    [("ref", "=", ref_value)], limit=1
+                    ["|", ("ref", "=", ref_norm), ("ref", "=", ref_value)], limit=1
                 )
 
                 if existing_partner:
-                    # ACTUALIZAR contacto existente (encontrado por REGISTRO/ref)
+                    # ACTUALIZAR solo campos clave si ya existe (para mayor velocidad)
                     try:
-                        existing_partner.write(vals)
+                        existing_partner.write(
+                            {
+                                "vat": vat_value,
+                                "ref": ref_norm,
+                            }
+                        )
+
                         partner_id = existing_partner.id
                         updated_count += 1
-                        log_lines.append(_("Actualizado (ref: %s): %s") % (ref_value, contact_name))
+                        log_lines.append(
+                            _("Actualizado DNI (ref: %s): %s (DNI: %s)")
+                            % (ref_norm, contact_name, vat_value)
+                        )
                     except Exception as e:
-                        error_msg = str(e)
-                        if "difiere del de la ubicación" in error_msg and zip_code:
-                            spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
-                            if spain:
-                                vals["country_id"] = spain.id
-                                existing_partner.write(vals)
-                                partner_id = existing_partner.id
-                                updated_count += 1
-                                log_lines.append(_("Actualizado (ref: %s, país corregido): %s") % (ref_value, contact_name))
-                            else:
-                                raise e
-                        else:
-                            raise e
+                        _logger.error(
+                            f"Error al actualizar DNI para {ref_norm}: {str(e)}"
+                        )
+                        raise e
+
                 else:
                     # CREAR nuevo contacto
                     try:
                         partner = self.env["res.partner"].create(vals)
                         partner_id = partner.id
                         created_count += 1
-                        log_lines.append(_("Creado (ref: %s): %s") % (ref_value, contact_name))
+                        log_lines.append(
+                            _("Creado (ref: %s): %s (DNI: %s)")
+                            % (ref_norm, contact_name, vat_value)
+                        )
                     except Exception as e:
                         error_msg = str(e)
                         if "difiere del de la ubicación" in error_msg and zip_code:
-                            spain = self.env["res.country"].search([("code", "=", "ES")], limit=1)
+                            spain = self.env["res.country"].search(
+                                [("code", "=", "ES")], limit=1
+                            )
                             if spain:
                                 vals["country_id"] = spain.id
                                 partner = self.env["res.partner"].create(vals)
                                 partner_id = partner.id
                                 created_count += 1
-                                log_lines.append(_("Creado (ref: %s, país corregido): %s") % (ref_value, contact_name))
+                                log_lines.append(
+                                    _("Creado (ref: %s, país corregido): %s (DNI: %s)")
+                                    % (ref_norm, contact_name, vat_value)
+                                )
                             else:
                                 raise e
                         else:
                             raise e
 
                 # Determinar método de pago basándose en si hay cuenta bancaria
-                # Si columna "Banco" tiene datos → Domiciliación bancaria (SEPA)
-                # Si columna "Banco" está vacía → Recibo (pago manual)
-                banco_value = self._to_str(row_data.get("Banco"))
+                # Si columna "BANCO" tiene datos → Domiciliación bancaria (SEPA)
+                # Si columna "BANCO" está vacía → Recibo (pago manual)
+                banco_value = self._to_str(
+                    row_data.get("BANCO")
+                    or row_data.get("BANCO_ID")
+                    or row_data.get("BANK")
+                )
                 partner = self.env["res.partner"].browse(partner_id)
 
                 if banco_value:
                     # BANCO: Crear cuenta bancaria + asignar modo de pago SEPA + crear mandato
                     try:
-                        bank_id, bank_error = self._create_or_update_bank_account(partner_id, banco_value)
+                        bank_id, bank_error = self._create_or_update_bank_account(
+                            partner_id, banco_value
+                        )
                         if bank_id:
                             log_lines.append(_("  → Cuenta bancaria: %s") % banco_value)
 
@@ -716,21 +893,31 @@ class RocioHermanoImportWizard(models.TransientModel):
                                 log_lines.append(_("  ⚠ Modo de pago: NO asignado"))
 
                             # Verificar si se creó/actualizó el mandato SEPA
-                            mandate = self.env["account.banking.mandate"].search([
-                                ("partner_bank_id", "=", bank_id),
-                                ("state", "=", "valid"),
-                                ("company_id", "=", self.env.company.id),
-                            ], limit=1)
+                            mandate = self.env["account.banking.mandate"].search(
+                                [
+                                    ("partner_bank_id", "=", bank_id),
+                                    ("state", "=", "valid"),
+                                    ("company_id", "=", self.env.company.id),
+                                ],
+                                limit=1,
+                            )
 
                             if mandate:
-                                log_lines.append(_("  ✓ Mandato SEPA: %s (válido)") % mandate.unique_mandate_reference)
+                                log_lines.append(
+                                    _("  ✓ Mandato SEPA: %s (válido)")
+                                    % mandate.unique_mandate_reference
+                                )
                             else:
-                                log_lines.append(_("  ⚠ Mandato SEPA: NO creado/válido"))
+                                log_lines.append(
+                                    _("  ⚠ Mandato SEPA: NO creado/válido")
+                                )
 
                             if bank_error:
                                 log_lines.append(_("  ℹ %s") % bank_error)
                         else:
-                            log_lines.append(_("  ✗ Error: No se pudo crear cuenta bancaria"))
+                            log_lines.append(
+                                _("  ✗ Error: No se pudo crear cuenta bancaria")
+                            )
                             if bank_error:
                                 log_lines.append(_("    %s") % bank_error)
                     except Exception as e:
@@ -738,16 +925,26 @@ class RocioHermanoImportWizard(models.TransientModel):
                 else:
                     # RECIBO: Sin cuenta bancaria, buscar o crear modo de pago manual
                     try:
-                        manual_payment_mode, manual_error = self._get_or_create_manual_payment_mode()
+                        manual_payment_mode, manual_error = (
+                            self._get_or_create_manual_payment_mode()
+                        )
                         if manual_payment_mode:
-                            partner.write({"customer_payment_mode_id": manual_payment_mode.id})
+                            partner.write(
+                                {"customer_payment_mode_id": manual_payment_mode.id}
+                            )
                             log_lines.append(_("  → Modo de pago: Recibo"))
                         elif manual_error:
-                            log_lines.append(_("  ✗ Error modo de pago manual: %s") % manual_error)
+                            log_lines.append(
+                                _("  ✗ Error modo de pago manual: %s") % manual_error
+                            )
                         else:
-                            log_lines.append(_("  ⚠ No se pudo asignar modo de pago manual"))
+                            log_lines.append(
+                                _("  ⚠ No se pudo asignar modo de pago manual")
+                            )
                     except Exception as e:
-                        log_lines.append(_("  ✗ Error al procesar modo de pago manual: %s") % str(e))
+                        log_lines.append(
+                            _("  ✗ Error al procesar modo de pago manual: %s") % str(e)
+                        )
 
                 # Print final con la referencia y el nombre registrado
                 partner = self.env["res.partner"].browse(partner_id)
@@ -756,6 +953,7 @@ class RocioHermanoImportWizard(models.TransientModel):
             except Exception as e:
                 error_count += 1
                 import traceback
+
                 error_detail = traceback.format_exc()
                 log_lines.append(_("Fila %s - Error: %s") % (row_idx, str(e)))
                 log_lines.append(_("  Detalles: %s") % error_detail)
