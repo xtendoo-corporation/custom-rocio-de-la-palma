@@ -130,18 +130,18 @@
                         <br />Fecha: <strong>
                             <span t-esc="invoice.invoice_date.strftime('%d/%m/%Y')" />
                         </strong>
-                        <span
-                            style="display:inline-block; width: 20px;"></span>
-                        <br /> Importe: <span
-                            t-esc="invoice.amount_total"
-                            t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'
-                            style="font-weight: bold;" />
                         <t
                             t-if="invoice.partner_id.brother_district">
                             <span style="display:inline-block; width: 20px;"></span> Distrito: <span
                                 t-esc="invoice.partner_id.brother_district"
                                 style="font-weight: bold;" />
                         </t>
+                        <span
+                            style="display:inline-block; width: 20px;"></span>
+                        <br /> Importe: <span
+                            t-esc="invoice.amount_total"
+                            t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'
+                            style="font-weight: bold;" />
                     </div>
 
                     <!-- PARTE DERECHA (Contenido Principal) -->
@@ -194,7 +194,7 @@
                                         class="recibo-label"
                                         t-esc="invoice.partner_id.brother_since.strftime('%d/%m/%Y')" />
                                         <t t-if="invoice.partner_id.brother_district">
-                                        <span style="padding-left: 12px;" > Distrito: </span>
+                                        <span style="padding-left: 400px;" > Distrito: </span>
                                         <strong class="recibo-label" t-esc="invoice.partner_id.brother_district" />
                                     </t>
                                 </div>
