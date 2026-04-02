@@ -32,15 +32,15 @@
                 top: 50%;
                 left: 6mm;
                 /* Ampliado para cubrir mejor la altura del A5 Landscape (148mm) */
-                width: 145mm;
-                margin-left: -72.5mm;
+                width: 160mm;
+                margin-left: -80mm;
 
                 -webkit-transform: rotate(-90deg);
                 transform: rotate(-90deg);
 
                 text-align: center;
                 white-space: nowrap;
-                font-size: 16px;
+                font-size: 17px;
                 color: #000;
                 letter-spacing: 1px;
                 margin-top: -8px; /* Ajustar para centrar verticalmente el texto */
