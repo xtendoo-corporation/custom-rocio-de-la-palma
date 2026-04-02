@@ -163,6 +163,7 @@
                                 </tr>
                             </table>
                             <div class="recibo-content">
+                                <br/>
                                 <div class="recibo-section">Hemos recibido de nuestro/a hermano/a: <br />
                                     <strong
                                         class="recibo-label" t-esc="invoice.partner_id.name" />
@@ -229,7 +230,8 @@
                                         <tr>
                                             <td
                                                 style="width: 90px; vertical-align: middle; text-align: left; padding: 0;">
-                                                <img t-att-src="invoice.get_portal_qr_data_uri()"
+                                                <img t-if="invoice.access_url"
+                                                    t-att-src="'/report/barcode/?type=QR&amp;value=' + invoice.get_base_url() + invoice.access_url + '&amp;width=70&amp;height=70'"
                                                     style="width: 70px; height: 70px; display: block;"
                                                     alt="QR Factura" />
                                             </td>
