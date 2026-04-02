@@ -124,6 +124,7 @@
 
                     <!-- PARTE IZQUIERDA (Texto Rotado) -->
                     <div class="left-panel-text">
+                        <br/>
                         <span t-esc="invoice.partner_id.name" style="font-weight: bold;" />
                         <span
                             style="display:inline-block; width: 20px;"></span>
