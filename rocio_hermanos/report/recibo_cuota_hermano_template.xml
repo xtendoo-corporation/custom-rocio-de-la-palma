@@ -13,7 +13,7 @@
                 .recibo-wrapper {
                 position: relative;
                 /* Quitamos min-height 100vh para evitar la hoja en blanco extra */
-                padding: 2mm 5mm 5mm 25mm;
+                padding: 1mm 5mm 2mm 25mm;
                 box-sizing: border-box;
                 page-break-inside: avoid;
                 overflow: hidden; /* Cortar cualquier desbordamiento fantasma */
@@ -31,19 +31,19 @@
                 position: absolute;
                 top: 50%;
                 left: 6mm;
-                /* Reducido para que quepa en la altura de un A5 Landscape (148mm) */
-                width: 130mm;
-                margin-left: -65mm;
+                /* Ampliado para cubrir mejor la altura del A5 Landscape (148mm) */
+                width: 145mm;
+                margin-left: -72.5mm;
 
                 -webkit-transform: rotate(-90deg);
                 transform: rotate(-90deg);
 
                 text-align: center;
                 white-space: nowrap;
-                font-size: 14px;
+                font-size: 16px;
                 color: #000;
                 letter-spacing: 1px;
-                margin-top: -6px; /* Ajustar para centrar verticalmente el texto */
+                margin-top: -8px; /* Ajustar para centrar verticalmente el texto */
                 margin-bottom: 10px; /* Separación entre el texto y el borde del panel */
 
                 }
@@ -91,9 +91,9 @@
                 margin-top: 4px;
                 }
                 .recibo-content {
-                margin-top: 20px;
+                margin-top: 10px;
                 font-size: 18px;
-                line-height: 1.7;
+                line-height: 1.5;
                 }
                 .recibo-label {
                 font-weight: bold;
@@ -101,8 +101,8 @@
                 font-size: 18px;
                 }
                 .recibo-section {
-                margin-bottom: 14px;
-                padding-bottom: 10px;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
                 border-bottom: 1.5px;
                 margin-top: 0;
                 }
